@@ -85,6 +85,8 @@ start_process (void *file_name_)
 
   hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
 
+  printf("3-3\n");
+
   //mod 1
   char **argv = palloc_get_page (0);
   int argc = 0;
@@ -98,6 +100,8 @@ start_process (void *file_name_)
     
     cur_str = strtok_r(file_name, " ", &next); ++argc;
   }
+
+  printf("3-4\n");
 
   success = load (argv[0], &if_.eip, &if_.esp);
 
@@ -151,6 +155,9 @@ start_process (void *file_name_)
     palloc_free_page (argv);
     palloc_free_page (file_name);
   }
+  
+  printf("3-5\n");
+
   hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
