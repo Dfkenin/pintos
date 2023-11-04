@@ -38,10 +38,23 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  //mod 1
+  char *name_copy;
+  name_copy = palloc_get_page (0);
+  if (name_copy == NULL)
+    return TID_ERROR;
+  strlcpy (name_copy, file_name, PGSIZE);
+  char *next_null;
+  name_copy = strtok_r(name_copy, " ", &next_null);
+
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (name_copy, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
+
+  //mod 1
+  palloc_free_page (name_copy);
+
   return tid;
 }
 
@@ -59,13 +72,73 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (file_name, &if_.eip, &if_.esp);
+
+  //mod 1
+  char **argv = palloc_get_page (0);
+  int argc = 0;
+
+  char *cur_str;
+  char *next;
+
+  cur_str = strtok_r(file_name, " ", &next);
+  while (cur_str != NULL) {
+    argv[argc] = cur_str;
+    
+    cur_str = strtok_r(file_name, " ", &next); ++argc;
+  }
+
+  success = load (argv[0], &if_.eip, &if_.esp);
 
   /* If load failed, quit. */
-  palloc_free_page (file_name);
-  if (!success) 
+  
+  //mod 1
+  if (!success) {
+    palloc_free_page (argv);
+    palloc_free_page (file_name);
     thread_exit ();
+  }
+  else {
+    void **esp = &if_.esp;
+    //1) argv[i][...]
+    for (int i = argc - 1; i >= 0; --i){
+      int len = strlen(argv[i]);
+      *esp -= len + 1;
+      strlcopy (*esp, argv[i], len + 1);
 
+      argv[i] = *(char **)esp;
+    }
+
+    //2) word-align
+    for (int i = 0; i < ((int)*esp % 4); ++i){
+      *esp -= 1;
+      **(uint8_t **)esp = 0;
+    }
+
+    //3) argv[n] = 0
+    *esp -= 4;
+    **(char * **)esp = 0;
+
+    //4) argv[i]
+    for (int i = argc - 1; i >= 0; --i){
+      *esp -= 4;
+      **(char * **)esp = argv[i];
+    }
+
+    //5) argv
+    *esp -= 4;
+    **(char ** **)esp = *esp + 4;
+
+    //6) argc
+    *esp -= 4;
+    **(int **)esp = argc;
+
+    //7) return address
+    *esp -= 4;
+    **(void * **)esp = 0;
+
+    palloc_free_page (argv);
+    palloc_free_page (file_name);
+  }
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
