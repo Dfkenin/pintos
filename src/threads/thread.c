@@ -198,6 +198,15 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
+  //mod 2-1
+  t->exit_code = -1;
+  t->parent = thread_current();
+  list_push_back(&(t->parent->children), &(t->childelem));
+  
+  list_init(&t->children);
+  sema_init(&(t->wait), 0);
+  t->exit_called = false;
+
   /* Add to run queue. */
   thread_unblock (t);
 

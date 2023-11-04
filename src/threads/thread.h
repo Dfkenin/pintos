@@ -101,6 +101,7 @@ struct thread
 
     //mod 2-1
     int exit_code;
+    struct thread *parent;
     struct list children;
     struct list_elem childelem;
     struct semaphore wait;

@@ -198,10 +198,12 @@ process_wait (tid_t child_tid UNUSED)
     {
       printf("is in??\n");
       child = list_entry (e, struct thread, childelem);
-      printf("child ready?\n");
-      printf("%d while given %d\n", child->tid, child_tid);
-      if (child->tid == child_tid)
+      //printf("%d while given %d\n", child->tid, child_tid);
+      if (child->tid == child_tid){
+        printf("comparison completed");
         selected = child;
+        printf("tid checked");
+      }
     }
   
   printf("wait3");
