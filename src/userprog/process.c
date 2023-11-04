@@ -204,14 +204,14 @@ process_wait (tid_t child_tid UNUSED)
     printf("no such child");
     return -1;
   }
+  
+  printf("wait4");
+  sema_down(&(selected->wait));
 
   if (!selected->exit_called){
     printf("no exit called");
     return -1;
   }
-  
-  printf("wait4");
-  sema_down(&(selected->wait));
 
   printf("wait5");
   int exit_code = selected->exit_code;
