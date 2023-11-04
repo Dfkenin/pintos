@@ -177,7 +177,7 @@ process_wait (tid_t child_tid UNUSED)
   if (selected == NULL)
     return -1;
 
-  if (!selected->exit_called)
+  if (selected->exit_called == NULL)
     return -1;
   
   sema_down(&(selected->wait));
