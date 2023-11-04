@@ -53,7 +53,7 @@ process_execute (const char *file_name)
     palloc_free_page (fn_copy); 
 
   //mod 1
-  palloc_free_page (name_copy);
+  //palloc_free_page (name_copy);
 
   return tid;
 }
@@ -161,6 +161,10 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  //mod 1
+  for (int i = 0; i < 100000000; ++i){
+    
+  }
   return -1;
 }
 
