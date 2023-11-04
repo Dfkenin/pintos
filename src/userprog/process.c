@@ -139,7 +139,7 @@ start_process (void *file_name_)
     palloc_free_page (argv);
     palloc_free_page (file_name);
   }
-  hex_dump(_if.esp, _if.esp, KERN_BASE - _if.esp, true);
+  hex_dump(if_.esp, if_.esp, 40, true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
