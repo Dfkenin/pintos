@@ -181,17 +181,22 @@ process_wait (tid_t child_tid UNUSED)
   //while (1) {}
   //return -1;
   //mod 2-1
-  printf("wait1");
   struct thread *t = thread_current();
   struct thread *selected = NULL;
   struct list_elem *e;
 
 
+  printf("wait1");
+  struct list *children_list = t->children;
+  if (children_list == NULL)
+    return -1;
+  
   printf("wait2");
   for (e = list_begin (&(t->children)); e != list_end (&(t->children));
        e = list_next (e))
     {
       struct thread *child = list_entry (e, struct thread, childelem);
+      printf("%d while given %d\n", child->tid, child_tid);
       if (child->tid == child_tid)
         selected = child;
     }
