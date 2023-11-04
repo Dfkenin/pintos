@@ -185,33 +185,30 @@ process_wait (tid_t child_tid UNUSED)
   struct thread *selected = NULL;
   struct list_elem *e = NULL;
 
-
-  printf("wait1");
   struct list *children_list = &(t->children);
   if (children_list == NULL)
     return -1;
   
   struct thread *child = NULL;
-  printf("wait2");
   for (e = list_begin (children_list); e != list_end (children_list);
        e = list_next (e))
     {
-      printf("is in??\n");
       child = list_entry (e, struct thread, childelem);
       //printf("%d while given %d\n", child->tid, child_tid);
-      if (child->tid == child_tid){
-        printf("comparison completed");
+      if (child->tid == child_tid)
         selected = child;
-        printf("tid checked");
-      }
     }
   
   printf("wait3");
-  if (selected == NULL)
+  if (selected == NULL){
+    printf("no such child");
     return -1;
+  }
 
-  if (!selected->exit_called)
+  if (!selected->exit_called){
+    printf("no exit called");
     return -1;
+  }
   
   printf("wait4");
   sema_down(&(selected->wait));
