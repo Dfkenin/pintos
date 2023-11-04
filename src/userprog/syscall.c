@@ -20,8 +20,8 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
-  printf ("system call!\n");
-  thread_exit ();
+  //printf ("system call!\n");
+  //thread_exit ();
 
   //mod 2-1
   switch (f->eax){
@@ -45,7 +45,7 @@ void exit(int status){
   struct thread *t = thread_current();
   t->exit_code = status;
   t->exit_called = true;
-  //printf("%s: exit(%d)\n", t->name, status);
+  printf("%s: exit(%d)\n", t->name, status);
   thread_exit();
 }
 pid_t exec(const char *cmd_line){

@@ -83,10 +83,6 @@ start_process (void *file_name_)
 
   printf("3-2\n");
 
-  hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
-
-  printf("3-3\n");
-
   //mod 1
   char **argv = palloc_get_page (0);
   int argc = 0;
@@ -98,10 +94,10 @@ start_process (void *file_name_)
   while (cur_str != NULL) {
     argv[argc] = cur_str;
     
-    cur_str = strtok_r(file_name, " ", &next); ++argc;
+    cur_str = strtok_r(NULL, " ", &next); ++argc;
   }
 
-  printf("3-4\n");
+  printf("3-3\n");
 
   success = load (argv[0], &if_.eip, &if_.esp);
 
@@ -156,7 +152,7 @@ start_process (void *file_name_)
     palloc_free_page (file_name);
   }
   
-  printf("3-5\n");
+  printf("3-4\n");
 
   hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
   /* Start the user process by simulating a return from an
@@ -182,8 +178,8 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   //mod 1
-  while (1) {}
-  return -1;
+  //while (1) {}
+  //return -1;
   //mod 2-1
   struct thread *t = thread_current();
   struct thread *selected = NULL;
