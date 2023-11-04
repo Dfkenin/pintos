@@ -69,6 +69,7 @@ process_execute (const char *file_name)
 static void
 start_process (void *file_name_)
 {
+  printf("3-1\n");
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
@@ -80,7 +81,7 @@ start_process (void *file_name_)
   if_.eflags = FLAG_IF | FLAG_MBS;
 
 
-  printf("3\n");
+  printf("3-2\n");
 
   hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
 
