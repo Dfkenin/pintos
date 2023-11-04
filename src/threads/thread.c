@@ -179,6 +179,17 @@ thread_create (const char *name, int priority,
   if (t == NULL)
     return TID_ERROR;
 
+  
+  //mod 2-1
+  t->exit_code = -1;
+  t->parent = thread_current();
+  list_push_back(&(t->parent->children), &(t->childelem));
+  
+  list_init(&t->children);
+  sema_init(&(t->wait), 0);
+  t->exit_called = false;
+
+  
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
@@ -465,14 +476,6 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   
-  //mod 2-1
-  t->exit_code = -1;
-  t->parent = thread_current();
-  list_push_back(&(t->parent->children), &(t->childelem));
-  
-  list_init(&t->children);
-  sema_init(&(t->wait), 0);
-  t->exit_called = false;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
