@@ -183,24 +183,17 @@ thread_create (const char *name, int priority,
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
   //mod 2-1
+  #ifdef USERPROG
   printf("create1\n");
   t->exit_code = -1;
   printf("create2\n");
   t->parent = thread_current();
   printf("create3\n");
-  struct list *pars_child_list = &(t->parent->children);
-  printf("create31\n");
-  struct list_elem *child_elem = &(t->childelem);
-  printf("create32\n");
-  list_push_back(pars_child_list, child_elem);
+  list_push_back(&t->parent->children, &t->childelem);
   printf("create4\n");
-  
-  list_init(&t->children);
-  printf("create5\n");
-  sema_init(&(t->wait), 0);
-  printf("create6\n");
   t->exit_called = false;
-  printf("create7\n");
+  printf("create5\n");
+  #endif
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -484,6 +477,13 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   
+  #ifdef USERPROG
+  printf("init1\n");
+  list_init(&t->children);
+  printf("init2\n");
+  sema_init(&(t->wait), 0);
+  printf("init3\n");
+  #endif
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
