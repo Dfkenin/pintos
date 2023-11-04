@@ -38,7 +38,8 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
-  printf("Here\n");
+  printf("1\n");
+
   //mod 1
   char *name_copy;
   name_copy = palloc_get_page (0);
@@ -48,6 +49,8 @@ process_execute (const char *file_name)
   char *next_null;
   name_copy = strtok_r(name_copy, " ", &next_null);
 
+  printf("2\n");
+
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (name_copy, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
@@ -55,6 +58,8 @@ process_execute (const char *file_name)
 
   //mod 1
   //palloc_free_page (name_copy);
+
+  printf("4\n");
 
   return tid;
 }
@@ -73,6 +78,9 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
+
+
+  printf("3\n");
 
   hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
 
