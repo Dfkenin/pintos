@@ -183,13 +183,20 @@ thread_create (const char *name, int priority,
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
   //mod 2-1
+  printf("create1\n");
   t->exit_code = -1;
+  printf("create2\n");
   t->parent = thread_current();
+  printf("create3\n");
   list_push_back(&(t->parent->children), &(t->childelem));
+  printf("create4\n");
   
   list_init(&t->children);
+  printf("create5\n");
   sema_init(&(t->wait), 0);
+  printf("create6\n");
   t->exit_called = false;
+  printf("create7\n");
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
