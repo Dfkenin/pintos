@@ -187,13 +187,13 @@ process_wait (tid_t child_tid UNUSED)
 
 
   printf("wait1");
-  struct list children_list = t->children;
+  struct list *children_list = &(t->children);
   if (children_list == NULL)
     return -1;
   
   struct thread *child = NULL;
   printf("wait2");
-  for (e = list_begin (&children_list); e != list_end (&children_list);
+  for (e = list_begin (children_list); e != list_end (children_list);
        e = list_next (e))
     {
       printf("is in??\n");
@@ -208,7 +208,7 @@ process_wait (tid_t child_tid UNUSED)
   if (selected == NULL)
     return -1;
 
-  if (selected->exit_called == NULL)
+  if (!selected->exit_called)
     return -1;
   
   printf("wait4");
