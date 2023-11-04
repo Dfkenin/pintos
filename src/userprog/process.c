@@ -38,6 +38,7 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  printf("Here\n");
   //mod 1
   char *name_copy;
   name_copy = palloc_get_page (0);
@@ -72,6 +73,8 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
+
+  hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
 
   //mod 1
   char **argv = palloc_get_page (0);
