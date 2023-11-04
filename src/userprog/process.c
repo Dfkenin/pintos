@@ -103,7 +103,7 @@ start_process (void *file_name_)
     for (int i = argc - 1; i >= 0; --i){
       int len = strlen(argv[i]);
       *esp -= len + 1;
-      strlcopy (*esp, argv[i], len + 1);
+      strlcpy (*esp, argv[i], len + 1);
 
       argv[i] = *(char **)esp;
     }
