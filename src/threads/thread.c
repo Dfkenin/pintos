@@ -198,14 +198,6 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
-  //mod 2-1
-  t->exit_code = -1;
-  t->parent = thread_current();
-  list_push_back(&(t->parent->children), &(t->childelem));
-  
-  list_init(&t->children);
-  sema_init(&(t->wait), 0);
-  t->exit_called = false;
 
   /* Add to run queue. */
   thread_unblock (t);
@@ -472,6 +464,15 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
+  
+  //mod 2-1
+  t->exit_code = -1;
+  t->parent = thread_current();
+  list_push_back(&(t->parent->children), &(t->childelem));
+  
+  list_init(&t->children);
+  sema_init(&(t->wait), 0);
+  t->exit_called = false;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
