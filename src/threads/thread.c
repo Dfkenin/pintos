@@ -188,7 +188,11 @@ thread_create (const char *name, int priority,
   printf("create2\n");
   t->parent = thread_current();
   printf("create3\n");
-  list_push_back(&(t->parent->children), &(t->childelem));
+  struct list *pars_child_list = &(t->parent->children);
+  printf("create31\n");
+  struct list_elem *child_elem = &(t->childelem);
+  printf("create32\n");
+  list_push_back(pars_child_list, child_elem);
   printf("create4\n");
   
   list_init(&t->children);
