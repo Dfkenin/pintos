@@ -97,6 +97,46 @@ bool remove(const char* file) {
     return filesys_remove(file);
 }
 
+int open(const char* file) {
+    validity(file); 
+    struct file file_=filesys_open(file);
+    if(file_==NULL)
+      return -1;
+    struct thread *cur=thread_current();
+    struct file **fdt=cur->fd_tab;
+    while((cur->fd_idx<BOUND)&&fdt[cur->fd_idx])
+      cur->fd_idx++;
+    if(cur->fd_idx>BOUND)
+      fd=-1;
+    else{
+    fdt[cur->fd_idx]=file;
+    int fd=cur->fd_idx;
+    }
+    if(fd==-1)
+       file_close(file_);
+    return fd;
+}
+
+int filesize(int fd) {
+    struct thread* cur = thread_current();
+    struct file* selected;
+    if (fd < 0 || fd >= BOUND)
+    {
+        selected=NULL;
+    }
+    selected = cur->fd_tab[fd];
+    if (selected == NULL)
+    {
+        return -1;
+    }
+    return file_length(selected);
+}
+
+int read(int fd, void* buffer, unsigned size) {
+
+
+}
+
 int write(int fd, const void* buffer, unsigned size) {
     int num;
     struct thread cur = thread_current();
@@ -117,6 +157,42 @@ int write(int fd, const void* buffer, unsigned size) {
     lock_release(&race_lock);
     return num;
 }
+
+void seek(int fd, unsigned position) {
+struct thread *cur=thread_current();
+struct file *file_;
+if(fd<0||fd>BOUND)
+  file_=NULL;
+else{
+file_=cur->fd_tab[fd];
+}
+if(file_<=2)
+  return;
+}
+
+unsigned tell(int fd) {
+struct thread *cur=thread_current();
+struct file *file_;
+if(fd<0||fd>BOUND)
+  file_=NULL;
+else{
+file_=cur->fd_tab[fd];
+}
+if(file_<=2)
+  return;
+return file_tell(file_);
+}
+
+void close(int fd) {
+    struct thread* cur = thread_current();
+    struct file* selected;
+    if (fd < 0 || fd >= BOUND)
+    {
+        selected = NULL;
+    }
+    selected = cur->fd_tab[fd];
+}
+
 
 void validity(const uint64_t *addr)
 {
