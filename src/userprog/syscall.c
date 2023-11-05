@@ -25,7 +25,7 @@ int write(int fd, const void* buffer, unsigned size);
 void seek(int fd, unsigned position);
 unsigned tell(int fd);
 void close(int fd);
-void validity(const uint64_t *addr);
+void validity(const uint32_t *addr);
 
 void
 syscall_init (void) 
@@ -48,18 +48,25 @@ syscall_handler (struct intr_frame *f UNUSED)
 
   //hex_dump(f->esp, f->esp, PHYS_BASE - f->esp, true);
 
-  if (!is_user_vaddr(f->esp) || (f->esp < BOTTOM)){
-    exit(-1);
-  }
+  validity(f->esp); 
 
   switch (*(uint32_t *)f->esp){
     case SYS_HALT: halt(); break;
-    case SYS_EXIT: if (!is_user_vaddr(f->esp+4) || (f->esp+4 < BOTTOM)) exit(-1); exit((int)*(uint32_t *)(f->esp+4)); break;
-    case SYS_EXEC: if (!is_user_vaddr(f->esp+4) || (f->esp+4 < BOTTOM)) exit(-1); 
+    case SYS_EXIT: validity(f->esp+4); exit((int)*(uint32_t *)(f->esp+4)); break;
+    case SYS_EXEC: validity(f->esp+4); 
       if (exec((const char *)*(uint32_t *)(f->esp+4)) == -1)
         exit(-1);
       break;
-    case SYS_WAIT: if (!is_user_vaddr(f->esp+4) || (f->esp+4 < BOTTOM)) exit(-1); f->eax = wait((pid_t)*(uint32_t *)(f->esp+4)); break;
+    case SYS_WAIT: validity(f->esp+4); f->eax = wait((pid_t)*(uint32_t *)(f->esp+4)); break;
+    case SYS_CREATE: validity(f->esp+4); validity(f->esp+8); f->eax = create((const char *)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
+    case SYS_REMOVE: validity(f->esp+4); f->eax = remove((const char *)*(uint32_t *)(f->esp+4)); break;
+    case SYS_OPEN: validity(f->esp+4); f->eax = open((const char *)*(uint32_t *)(f->esp+4)); break;
+    case SYS_FILESIZE: validity(f->esp+4); f->eax = filesize((int)*(uint32_t *)(f->esp+4)); break;
+    case SYS_READ: validity(f->esp+4); validity(f->esp+8); validity(f->esp+12); f->eax = read((int)*(uint32_t *)(f->esp+4),(void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
+    case SYS_WRITE: validity(f->esp+4); validity(f->esp+8); validity(f->esp+12); f->eax = write((int)*(uint32_t *)(f->esp+4),(const void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
+    case SYS_SEEK: validity(f->esp+4); validity(f->esp+8); seek((int)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
+    case SYS_TELL: validity(f->esp+4); f->eax = tell((int)*(uint32_t *)(f->esp+4)); break;
+    case SYS_CLOSE: validity(f->esp+4); close((int)*(uint32_t *)(f->esp+4)); break;
     default: exit(-1); break;
   }
 }
@@ -88,114 +95,113 @@ int wait(pid_t pid){
 
 //mod 2-2
 bool create(const char* file, unsigned initial_size) {
-    validity(file);
-    return filesys_create(file, initial_size);
+  validity(file);
+  return filesys_create(file, initial_size);
 }
 
 bool remove(const char* file) {
-    validity(file);
-    return filesys_remove(file);
+  validity(file);
+  return filesys_remove(file);
 }
 
 int open(const char* file) {
-    validity(file); 
-    struct file file_=filesys_open(file);
-    if(file_==NULL)
-      return -1;
-    struct thread *cur=thread_current();
-    struct file **fdt=cur->fd_tab;
-    while((cur->fd_idx<BOUND)&&fdt[cur->fd_idx])
-      cur->fd_idx++;
-    if(cur->fd_idx>BOUND)
-      fd=-1;
-    else{
-    fdt[cur->fd_idx]=file;
-    int fd=cur->fd_idx;
-    }
-    if(fd==-1)
-       file_close(file_);
-    return fd;
+  validity(file); 
+  struct file *file_ = filesys_open(file);
+  if (file_ == NULL)
+    return -1;
+  struct thread *cur=thread_current();
+  struct file **fdt=cur->fd_tab;
+  while ((cur->fd_idx<BOUND) && fdt[cur->fd_idx])
+    cur->fd_idx++;
+  if (cur->fd_idx>BOUND)
+    fd=-1;
+  else{
+  fdt[cur->fd_idx]=file;
+  int fd=cur->fd_idx;
+  }
+  if(fd==-1)
+    file_close(file_);
+  return fd;
 }
 
 int filesize(int fd) {
-    struct thread* cur = thread_current();
-    struct file* selected;
-    if (fd < 0 || fd >= BOUND)
-    {
-        selected=NULL;
-    }
-    selected = cur->fd_tab[fd];
-    if (selected == NULL)
-    {
-        return -1;
-    }
-    return file_length(selected);
+  struct thread* cur = thread_current();
+  struct file* selected;
+  if (fd < 0 || fd >= BOUND)
+  {
+    selected = NULL;
+  }
+  selected = cur->fd_tab[fd];
+  if (selected == NULL)
+  {
+    exit(-1);
+  }
+  return file_length(selected);
 }
 
 int read(int fd, void* buffer, unsigned size) {
-   validity(buffer);
-   int num;
-  struct thread *cur=thread_current();
-  if(fd==0){
-  *(char *)buffer=input_getc();
-    num=size;
+  validity(buffer);
+  int num;
+  struct thread *cur = thread_current();
+  if (fd == 0){
+    *(char *)buffer = input_getc();
+    num = size;
   }
   else{
-       if(fd<0||fd>=BOUND)
-         return -1;
-      else{
-         lock_acquire(&race_lock);
-         num=file_read(cur->fd_tab[fd],buffer,size);
-        lock_release(&race_lock);
-      }
+    if ( fd < 0 || fd >= BOUND)
+      return -1;
+    else{
+      lock_acquire(&race_lock);
+      num = file_read(cur->fd_tab[fd], buffer, size);
+      lock_release(&race_lock);
+    }
   }
   return num;
 }
 
 int write(int fd, const void* buffer, unsigned size) {
-    int num;
-    struct thread cur = thread_current();
-    validity(buffer);
-    lock_acquire(&race_lock);
-    if (fd == 1) {
-        putbuf(buffer, size);
-        num = size;
+  int num;
+  struct thread cur = thread_current();
+  validity(buffer);
+  lock_acquire(&race_lock);
+  if (fd == 1){
+    putbuf(buffer, size);
+    num = size;
+  }
+  else{
+    if (fd < 0 || fd >= BOUND)
+      num = -1;
+    else {
+      num = file_write(cur->fd_tab[fd], buffer, size);
     }
-    else
-    {
-        if (fd < 0 || fd >= BOUND)
-            num = -1;
-        else {
-            num = file_write(cur->fd_tab[fd], buffer, size);
-        }
-    }
-    lock_release(&race_lock);
-    return num;
+  }
+  lock_release(&race_lock);
+  return num;
 }
 
 void seek(int fd, unsigned position) {
-    struct thread *cur=thread_current();
-    struct file *file_;
-    if(fd<0||fd>BOUND)
-      file_=NULL;
-    else{
-    file_=cur->fd_tab[fd];
-    }
-    if(file_<=2)
-      return;
+  struct thread *cur=thread_current();
+  struct file *file_;
+  if ( fd < 0 || fd > BOUND)
+    file_ = NULL;
+  else{
+    file_ = cur->fd_tab[fd];
+  }
+  if (file_ <= 2)
+    return;
 }
 
 unsigned tell(int fd) {
-    struct thread *cur=thread_current();
-    struct file *file_;
-    if(fd<0||fd>BOUND)
-      file_=NULL;
-    else{
-    file_=cur->fd_tab[fd];
-    }
-    if(file_<=2)
-      return;
-    return file_tell(file_);
+  struct thread *cur = thread_current();
+  struct file *file_;
+  if ( fd < 0 || fd > BOUND)
+    file_ = NULL;
+  else{
+  file_ = cur->fd_tab[fd];
+  }
+  if(file_ <= 2)
+    return;
+  return file_tell(file_);
 }
 
 void close(int fd) {
@@ -209,7 +215,7 @@ void close(int fd) {
 }
 
 
-void validity(const uint64_t *addr)
+void validity(const uint32_t *addr)
 {
     struct thread* cur = thread_current();
     if (addr == NULL || !(is_user_vaddr(addr)) || pagedir_get_page(cur->pagedir, addr) == NULL)
