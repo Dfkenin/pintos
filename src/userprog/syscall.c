@@ -133,8 +133,23 @@ int filesize(int fd) {
 }
 
 int read(int fd, void* buffer, unsigned size) {
-
-
+   validity(buffer);
+   int num;
+  struct thread *cur=thread_current();
+  if(fd==0){
+  *(char *)buffer=input_getc();
+    num=size;
+  }
+  else{
+       if(fd<0||fd>=BOUND)
+         return -1;
+      else{
+         lock_acquire(&race_lock);
+         num=file_read(cur->fd_tab[fd],buffer,size);
+        lock_release(&race_lock);
+      }
+  }
+  return num;
 }
 
 int write(int fd, const void* buffer, unsigned size) {
