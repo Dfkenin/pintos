@@ -166,20 +166,41 @@ int filesize(int fd) {
 }
 
 int read(int fd, void* buffer, unsigned size) {
+  printf("r1\n");
   validity(buffer);
   int num;
   struct thread *cur = thread_current();
+  struct file *file_;
+  lock_acquire(&race_lock);
+  printf("r2. fd is %d\n", fd);
   if (fd == 0){
-    *(char *)buffer = input_getc();
+    for (int i = 0; i < size; ++i){
+      ((char *) buffer)[i] = input_getc();
+      if (((char *) buffer)[i] == '\0')
+        break;
+    }
+    lock_release(&race_lock);
     num = size;
+    printf("r3-1\n");
   }
   else{
-    if ( fd < 0 || fd >= BOUND)
+    if ( fd < 0 || fd >= BOUND){
+      lock_release(&race_lock);
+      printf("r3-2\n");
       exit(-1);
+    }
     else{
-      lock_acquire(&race_lock);
+      printf("r3-3-1\n");
+      file_ = cur->fd_tab[fd];
+      printf("r3-3-2\n");
+      if (file_ == NULL){
+        lock_release(&race_lock);
+        printf("r3-3-3\n");
+        exit(-1);
+      }
       num = file_read(cur->fd_tab[fd], buffer, size);
       lock_release(&race_lock);
+      printf("r3-3-4\n");
     }
   }
   return num;
