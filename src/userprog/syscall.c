@@ -5,6 +5,7 @@
 #include "threads/thread.h"
 //mod 2-1
 #include "threads/vaddr.h"
+#define BOTTOM 0x08048000
 
 static void syscall_handler (struct intr_frame *);
 //mod 2-1
@@ -26,7 +27,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
-  if (!is_user_vaddr(f->edi)){
+  if (!is_user_vaddr(f->esp) || (f->esp < BOTTOM)){
     exit(-1);
   }
 
