@@ -29,6 +29,7 @@ void seek(int fd, unsigned position);
 unsigned tell(int fd);
 void close(int fd);
 void validity(const uint32_t *addr);
+void for_valid(const uint32_t *addr, int num);
 
 void
 syscall_init (void) 
@@ -58,21 +59,21 @@ syscall_handler (struct intr_frame *f UNUSED)
 
   switch (*(uint32_t *)f->esp){
     case SYS_HALT: halt(); break;
-    case SYS_EXIT: validity(f->esp+4); exit((int)*(uint32_t *)(f->esp+4)); break;
-    case SYS_EXEC: validity(f->esp+4); 
+    case SYS_EXIT: for_valid(f->esp+4, 1); exit((int)*(uint32_t *)(f->esp+4)); break;
+    case SYS_EXEC: for_valid(f->esp+4, 1); 
       if (exec((const char *)*(uint32_t *)(f->esp+4)) == -1)
         exit(-1);
       break;
-    case SYS_WAIT: validity(f->esp+4); f->eax = wait((pid_t)*(uint32_t *)(f->esp+4)); break;
-    case SYS_CREATE: validity(f->esp+4); validity(f->esp+8); f->eax = create((const char *)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
-    case SYS_REMOVE: validity(f->esp+4); f->eax = remove((const char *)*(uint32_t *)(f->esp+4)); break;
-    case SYS_OPEN: validity(f->esp+4); f->eax = open((const char *)*(uint32_t *)(f->esp+4)); break;
-    case SYS_FILESIZE: validity(f->esp+4); f->eax = filesize((int)*(uint32_t *)(f->esp+4)); break;
-    case SYS_READ: validity(f->esp+4); validity(f->esp+8); validity(f->esp+12); f->eax = read((int)*(uint32_t *)(f->esp+4),(void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
-    case SYS_WRITE: validity(f->esp+4); validity(f->esp+8); validity(f->esp+12); f->eax = write((int)*(uint32_t *)(f->esp+4),(const void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
-    case SYS_SEEK: validity(f->esp+4); validity(f->esp+8); seek((int)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
-    case SYS_TELL: validity(f->esp+4); f->eax = tell((int)*(uint32_t *)(f->esp+4)); break;
-    case SYS_CLOSE: validity(f->esp+4); close((int)*(uint32_t *)(f->esp+4)); break;
+    case SYS_WAIT: for_valid(f->esp+4, 1); f->eax = wait((pid_t)*(uint32_t *)(f->esp+4)); break;
+    case SYS_CREATE: for_valid(f->esp+4, 2); f->eax = create((const char *)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
+    case SYS_REMOVE: for_valid(f->esp+4, 1); f->eax = remove((const char *)*(uint32_t *)(f->esp+4)); break;
+    case SYS_OPEN: for_valid(f->esp+4, 1); f->eax = open((const char *)*(uint32_t *)(f->esp+4)); break;
+    case SYS_FILESIZE: for_valid(f->esp+4, 1); f->eax = filesize((int)*(uint32_t *)(f->esp+4)); break;
+    case SYS_READ: for_valid(f->esp+4, 3); f->eax = read((int)*(uint32_t *)(f->esp+4),(void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
+    case SYS_WRITE: for_valid(f->esp+4, 3); f->eax = write((int)*(uint32_t *)(f->esp+4),(const void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
+    case SYS_SEEK: for_valid(f->esp+4, 2); seek((int)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
+    case SYS_TELL: for_valid(f->esp+4, 1); f->eax = tell((int)*(uint32_t *)(f->esp+4)); break;
+    case SYS_CLOSE: for_valid(f->esp+4, 1); close((int)*(uint32_t *)(f->esp+4)); break;
     default: exit(-1); break;
   }
 }
@@ -225,21 +226,29 @@ unsigned tell(int fd) {
 }
 
 void close(int fd) {
-    struct thread* cur = thread_current();
-    struct file* selected;
-    if (fd < 0 || fd >= BOUND)
-    {
-        selected = NULL;
-    }
-    selected = cur->fd_tab[fd];
+  struct thread* cur = thread_current();
+  struct file* selected;
+  if (fd < 0 || fd >= BOUND)
+  {
+    selected = NULL;
+  }
+  selected = cur->fd_tab[fd];
 }
 
 
-void validity(const uint32_t *addr)
-{
-    struct thread* cur = thread_current();
-    if (addr == NULL || !(is_user_vaddr(addr)) || pagedir_get_page(cur->pagedir, addr) == NULL)
-    {
-        exit(-1);
-    }
+void validity(const uint32_t *addr){
+  struct thread* cur = thread_current();
+  if (addr == NULL || !(is_user_vaddr(addr)) || addr < BOTTOM || pagedir_get_page(cur->pagedir, addr) == NULL)
+  {
+    exit(-1);
+  }
+}
+
+void for_valid(const uint32_t *addr, int num){
+  for (int i = 0; i < num; ++i){
+    validity(addr + 4*i);
+    validity(addr + 4*i + 1);
+    validity(addr + 4*i + 2);
+    validity(addr + 4*i + 3);
+  }
 }
