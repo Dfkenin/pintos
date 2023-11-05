@@ -174,28 +174,28 @@ int write(int fd, const void* buffer, unsigned size) {
 }
 
 void seek(int fd, unsigned position) {
-struct thread *cur=thread_current();
-struct file *file_;
-if(fd<0||fd>BOUND)
-  file_=NULL;
-else{
-file_=cur->fd_tab[fd];
-}
-if(file_<=2)
-  return;
+    struct thread *cur=thread_current();
+    struct file *file_;
+    if(fd<0||fd>BOUND)
+      file_=NULL;
+    else{
+    file_=cur->fd_tab[fd];
+    }
+    if(file_<=2)
+      return;
 }
 
 unsigned tell(int fd) {
-struct thread *cur=thread_current();
-struct file *file_;
-if(fd<0||fd>BOUND)
-  file_=NULL;
-else{
-file_=cur->fd_tab[fd];
-}
-if(file_<=2)
-  return;
-return file_tell(file_);
+    struct thread *cur=thread_current();
+    struct file *file_;
+    if(fd<0||fd>BOUND)
+      file_=NULL;
+    else{
+    file_=cur->fd_tab[fd];
+    }
+    if(file_<=2)
+      return;
+    return file_tell(file_);
 }
 
 void close(int fd) {
