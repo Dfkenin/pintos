@@ -5,6 +5,8 @@
 #include "threads/thread.h"
 //mod 2-1
 #include "threads/vaddr.h"
+//mod 2-2
+#include "userprog/pagedir.h"
 #define BOTTOM 0x08048000
 
 static void syscall_handler (struct intr_frame *);
@@ -119,7 +121,7 @@ int write(int fd, const void* buffer, unsigned size) {
 void validity(const uint64_t *addr)
 {
     struct thread* cur = thread_current();
-    if (addr == NULL || !(is_user_vaddr(addr)) || pml4_get_page(cur->pml4, addr) == NULL)
+    if (addr == NULL || !(is_user_vaddr(addr)) || pagedir_get_page(cur->pagedir, addr) == NULL)
     {
         exit(-1);
     }
