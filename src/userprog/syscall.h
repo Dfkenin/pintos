@@ -12,5 +12,8 @@ void exit(int status);
 pid_t exec(const char *cmd_line);
 int wait(pid_t pit);
 
+//mod 2-2
+struct lock race_lock;
+
 
 #endif /* userprog/syscall.h */
