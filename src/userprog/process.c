@@ -38,7 +38,7 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
-  printf("1\n");
+  //printf("1\n");
 
   //mod 1
   char *name_copy;
@@ -49,7 +49,7 @@ process_execute (const char *file_name)
   char *next_null;
   name_copy = strtok_r(name_copy, " ", &next_null);
 
-  printf("2\n");
+  //printf("2\n");
 
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (name_copy, PRI_DEFAULT, start_process, fn_copy);
@@ -59,7 +59,7 @@ process_execute (const char *file_name)
   //mod 1
   //palloc_free_page (name_copy);
 
-  printf("4\n");
+  //printf("4\n");
 
   return tid;
 }
@@ -69,7 +69,7 @@ process_execute (const char *file_name)
 static void
 start_process (void *file_name_)
 {
-  printf("3-1\n");
+  //printf("3-1\n");
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
@@ -81,7 +81,7 @@ start_process (void *file_name_)
   if_.eflags = FLAG_IF | FLAG_MBS;
 
 
-  printf("3-2\n");
+  //printf("3-2\n");
 
   //mod 1
   char **argv = palloc_get_page (0);
@@ -97,7 +97,7 @@ start_process (void *file_name_)
     cur_str = strtok_r(NULL, " ", &next); ++argc;
   }
 
-  printf("3-3\n");
+  //printf("3-3\n");
 
   success = load (argv[0], &if_.eip, &if_.esp);
 
@@ -155,9 +155,9 @@ start_process (void *file_name_)
     palloc_free_page (file_name);
   }
   
-  printf("3-4\n");
+  //printf("3-4\n");
 
-  hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
+  //hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -199,12 +199,12 @@ process_wait (tid_t child_tid UNUSED)
       //printf("%d while given %d\n", child->tid, child_tid);
       if (child->tid == child_tid){
         sema_down(&(child->wait));
-        if (!selected->exit_called){
-          printf("no exit called");
+        if (!child->exit_called){
+          //printf("no exit called");
           return -1;
         }
         int exit_code = child->exit_code;
-        list_remove(&(child->childelem));
+        //list_remove(&(child->childelem));
         return exit_code;
       }
     }
