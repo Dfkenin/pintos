@@ -113,11 +113,12 @@ int open(const char* file) {
   struct file **fdt=cur->fd_tab;
   while ((cur->fd_idx<BOUND) && fdt[cur->fd_idx])
     cur->fd_idx++;
+  int fd;
   if (cur->fd_idx>BOUND)
-    fd=-1;
+    fd = -1;
   else{
-  fdt[cur->fd_idx]=file;
-  int fd=cur->fd_idx;
+    fdt[cur->fd_idx]=file;
+    fd=cur->fd_idx;
   }
   if(fd==-1)
     file_close(file_);
@@ -161,7 +162,7 @@ int read(int fd, void* buffer, unsigned size) {
 
 int write(int fd, const void* buffer, unsigned size) {
   int num;
-  struct thread cur = thread_current();
+  struct thread *cur = thread_current();
   validity(buffer);
   lock_acquire(&race_lock);
   if (fd == 1){
