@@ -105,7 +105,7 @@ start_process (void *file_name_)
   
   //mod 1
   if (!success) {
-    palloc_free_page (argv);
+    //palloc_free_page (argv);
     palloc_free_page (file_name);
     thread_exit ();
   }
@@ -185,7 +185,6 @@ process_wait (tid_t child_tid UNUSED)
   //return -1;
   //mod 2-1
   struct thread *t = thread_current();
-  struct thread *selected = NULL;
   struct list_elem *e = NULL;
 
   struct list *children_list = &(t->children);
@@ -198,30 +197,18 @@ process_wait (tid_t child_tid UNUSED)
     {
       child = list_entry (e, struct thread, childelem);
       //printf("%d while given %d\n", child->tid, child_tid);
-      if (child->tid == child_tid)
-        selected = child;
+      if (child->tid == child_tid){
+        sema_down(&(child->wait));
+        if (!selected->exit_called){
+          printf("no exit called");
+          return -1;
+        }
+        int exit_code = child->exit_code;
+        list_remove(&(child->childelem));
+        return exit_code;
+      }
     }
-  
-  printf("wait3");
-  if (selected == NULL){
-    printf("no such child");
-    return -1;
-  }
-  
-  printf("wait4");
-  sema_down(&(selected->wait));
-
-  if (!selected->exit_called){
-    printf("no exit called");
-    return -1;
-  }
-
-  printf("wait5");
-  int exit_code = selected->exit_code;
-  //list_remove(&(selected->childelem));
-  //palloc_free_page(selected);
-  printf("wait6");
-  return exit_code;
+  return -1;
 }
 
 /* Free the current process's resources. */
