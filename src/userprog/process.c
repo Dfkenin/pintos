@@ -121,7 +121,7 @@ start_process (void *file_name_)
     }
 
     //2) word-align
-    for (int i = 0; i < ((int)*esp % 4); ++i){
+    for (int i = 0; i < ((int)*esp % 8); ++i){
       *esp -= 1;
       **(uint8_t **)esp = 0;
     }
@@ -143,13 +143,13 @@ start_process (void *file_name_)
     //6) argc
     *esp -= 4;
     **(int **)esp = argc;
+    if_.edi = argc;
 
     //7) return address
     *esp -= 4;
     **(void * **)esp = 0;
-
-    if_.edi = argc;
     if_.esi = (uint32_t)*esp + sizeof(void *);
+    printf("sizeof(void *) : %d", sizeof(void *));
 
     palloc_free_page (argv);
     palloc_free_page (file_name);
