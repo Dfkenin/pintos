@@ -112,14 +112,20 @@ bool remove(const char* file) {
 }
 
 int open(const char* file) {
+  printf("o1\n");
   validity(file); 
+  printf("o2\n");
   struct file *file_ = filesys_open(file);
+  printf("o3\n");
   if (file_ == NULL)
-    return -1;
+    exit(-1);
+  printf("o4\n");
   struct thread *cur=thread_current();
   struct file **fdt=cur->fd_tab;
+  printf("o5\n");
   while ((cur->fd_idx<BOUND) && fdt[cur->fd_idx])
     cur->fd_idx++;
+  printf("o6\n");
   int fd;
   if (cur->fd_idx>BOUND)
     fd = -1;
@@ -127,8 +133,10 @@ int open(const char* file) {
     fdt[cur->fd_idx]=file;
     fd=cur->fd_idx;
   }
+  printf("fd = %d\n", fd);
   if(fd==-1)
     file_close(file_);
+  printf("o7\n");
   return fd;
 }
 
