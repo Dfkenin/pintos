@@ -27,6 +27,14 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
+  printf("esp: %x\n", f->esp);
+  printf("esp + 8: %x\n", f->esp + 8);
+  printf("value of it: %x\n", (int *)*(uint32_t *)(f->esp+8));
+  printf("it is argv, so argv[0] is : %x\n", *(int *)*(uint32_t *)(f->esp+8));
+  printf("edi: %x\n", f->edi);
+
+  hex_dump(f->esp, f->esp, PHYS_BASE - f->esp, true);
+
   if (!is_user_vaddr(f->esp) || (f->esp < BOTTOM)){
     exit(-1);
   }

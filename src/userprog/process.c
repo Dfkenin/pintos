@@ -117,7 +117,7 @@ start_process (void *file_name_)
       *esp -= len + 1;
       strlcpy (*esp, argv[i], len + 1);
 
-      argv[i] = *(char **)esp;
+      argv[i] = (uint32_t *)*esp;
     }
 
     //2) word-align
@@ -128,22 +128,22 @@ start_process (void *file_name_)
 
     //3) argv[n] = 0
     *esp -= 4;
-    **(char * **)esp = 0;
+    **(uint32_t **)esp = 0;
 
     //4) argv[i]
     for (int i = argc - 1; i >= 0; --i){
       *esp -= 4;
-      **(char * **)esp = argv[i];
+      **(uint32_t **)esp = argv[i];
     }
 
     //5) argv
     *esp -= 4;
-    **(char ** **)esp = *esp + 4;
+    **(uint32_t **)esp = *esp + 4;
     if_.edi = *esp + 4;
 
     //6) argc
     *esp -= 4;
-    **(int **)esp = argc;
+    **(uint32_t **)esp = argc;
 
     //7) return address
     *esp -= 4;
