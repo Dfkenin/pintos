@@ -27,26 +27,26 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
-  printf("esp: %x\n", f->esp);
-  printf("esp + 8: %x\n", f->esp + 8);
-  printf("value of it: %x\n", (int *)*(uint32_t *)(f->esp+8));
-  printf("it is argv, so argv[0] is : %x\n", *(int *)*(uint32_t *)(f->esp+8));
-  printf("edi: %x\n", f->edi);
+  //printf("esp: %x\n", f->esp);
+  //printf("esp + 8: %x\n", f->esp + 8);
+  //printf("value of it: %x\n", (int *)*(uint32_t *)(f->esp+8));
+  //printf("it is argv, so argv[0] is : %x\n", *(int *)*(uint32_t *)(f->esp+8));
+  //printf("edi: %x\n", f->edi);
 
-  hex_dump(f->esp, f->esp, PHYS_BASE - f->esp, true);
+  //hex_dump(f->esp, f->esp, PHYS_BASE - f->esp, true);
 
   if (!is_user_vaddr(f->esp) || (f->esp < BOTTOM)){
     exit(-1);
   }
 
-  switch (f->eax){
+  switch (*(uint32_t *)f->esp){
     case SYS_HALT: halt(); break;
-    case SYS_EXIT: exit((int)*(uint32_t *)(f->edi)); break;
-    case SYS_EXEC: 
-      if (exec((const char *)*(uint32_t *)(f->edi)) == -1)
+    case SYS_EXIT: if (!is_user_vaddr(f->esp+4) || (f->esp+4 < BOTTOM)) exit(-1); exit((int)*(uint32_t *)(f->esp+4)); break;
+    case SYS_EXEC: if (!is_user_vaddr(f->esp+4) || (f->esp+4 < BOTTOM)) exit(-1); 
+      if (exec((const char *)*(uint32_t *)(f->esp+4)) == -1)
         exit(-1);
       break;
-    case SYS_WAIT: f->eax = wait((pid_t)*(uint32_t *)(f->edi)); break;
+    case SYS_WAIT: if (!is_user_vaddr(f->esp+4) || (f->esp+4 < BOTTOM)) exit(-1); f->eax = wait((pid_t)*(uint32_t *)(f->esp+4)); break;
     default: exit(-1); break;
   }
 }
