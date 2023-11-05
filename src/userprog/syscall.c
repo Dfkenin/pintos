@@ -7,6 +7,7 @@
 #include "threads/vaddr.h"
 //mod 2-2
 #include "userprog/pagedir.h"
+#include "threads/synch.h"
 #define BOTTOM 0x08048000
 
 static void syscall_handler (struct intr_frame *);
@@ -16,6 +17,8 @@ void exit(int status);
 pid_t exec(const char *cmd_line);
 int wait(pid_t pid);
 //mod 2-2
+struct lock race_lock;
+
 bool create(const char* file, unsigned initial_size);
 bool remove(const char* file);
 int open(const char* file);
@@ -31,6 +34,9 @@ void
 syscall_init (void) 
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+
+  //mod 2-2
+  lock_init(&race_lock);
 }
 
 static void
@@ -174,9 +180,10 @@ int write(int fd, const void* buffer, unsigned size) {
     num = size;
   }
   else{
-    if (fd < 0 || fd >= BOUND)
+    if (fd < 0 || fd >= BOUND) {
       printf("w3-2\n");
       exit(-1);
+    }
     else {
       struct file *file_ = cur->fd_tab[fd];
       printf("w3-2\n");

@@ -14,7 +14,6 @@ pid_t exec(const char *cmd_line);
 int wait(pid_t pit);
 
 //mod 2-2
-struct lock race_lock;
 bool create(const char* file, unsigned initial_size);
 bool remove(const char* file);
 int open(const char* file);
