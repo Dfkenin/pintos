@@ -151,6 +151,7 @@ int open(const char* file) {
 }
 
 int filesize(int fd) {
+  printf("fs1\n");
   struct thread* cur = thread_current();
   struct file* selected;
   if (fd < 0 || fd >= BOUND){
@@ -159,21 +160,24 @@ int filesize(int fd) {
   else{
     selected = cur->fd_tab[fd];
   }
+  printf("fs2\n");
   if (selected == NULL)
   {
+    printf("fs3-1\n");
     exit(-1);
   }
+  printf("fs3-2\n");
   return file_length(selected);
 }
 
 int read(int fd, void* buffer, unsigned size) {
-  printf("r1\n");
+  //printf("r1\n");
   validity(buffer);
   int num;
   struct thread *cur = thread_current();
   struct file *file_;
   lock_acquire(&race_lock);
-  printf("r2. fd is %d\n", fd);
+  //printf("r2. fd is %d\n", fd);
   if (fd == 0){
     for (int i = 0; i < size; ++i){
       ((char *) buffer)[i] = input_getc();
@@ -182,26 +186,27 @@ int read(int fd, void* buffer, unsigned size) {
     }
     lock_release(&race_lock);
     num = size;
-    printf("r3-1\n");
+    //printf("r3-1\n");
   }
   else{
     if ( fd < 0 || fd >= BOUND){
       lock_release(&race_lock);
-      printf("r3-2\n");
+      //printf("r3-2\n");
       exit(-1);
     }
     else{
-      printf("r3-3-1\n");
+      //printf("r3-3-1\n");
       file_ = cur->fd_tab[fd];
-      printf("r3-3-2\n");
+      //printf("r3-3-2\n");
       if (file_ == NULL){
         lock_release(&race_lock);
-        printf("r3-3-3\n");
+        //printf("r3-3-3\n");
         exit(-1);
       }
+      //printf("r3-3-4\n");
       num = file_read(file_, buffer, size);
       lock_release(&race_lock);
-      printf("r3-3-4\n");
+      //printf("r3-3-5\n");
     }
   }
   return num;
