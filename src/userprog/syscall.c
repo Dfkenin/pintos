@@ -117,7 +117,7 @@ int open(const char* file) {
   //printf("o2\n");
   lock_acquire(&race_lock);
   struct file *file_ = filesys_open(file);
-  printf("o3\n");
+  //printf("o3\n");
   if (file_ == NULL){
     lock_release(&race_lock);
     return -1;
@@ -153,11 +153,12 @@ int open(const char* file) {
 int filesize(int fd) {
   struct thread* cur = thread_current();
   struct file* selected;
-  if (fd < 0 || fd >= BOUND)
-  {
+  if (fd < 0 || fd >= BOUND){
     selected = NULL;
   }
-  selected = cur->fd_tab[fd];
+  else{
+    selected = cur->fd_tab[fd];
+  }
   if (selected == NULL)
   {
     exit(-1);
