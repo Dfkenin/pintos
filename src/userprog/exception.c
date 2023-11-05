@@ -7,6 +7,8 @@
 //mod 2-1
 #include "threads/vaddr.h"
 #include "userprog/syscall.h"
+#include "threads/thread.h"
+#include "userprog/pagedir.h"
 
 /* Number of page faults processed. */
 static long long page_fault_cnt;
@@ -152,8 +154,15 @@ page_fault (struct intr_frame *f)
   user = (f->error_code & PF_U) != 0;
 
   //mod 2-1
-  if (is_kernel_vaddr(fault_addr) || !not_present)
+  if (fault_addr == NULL || !is_user_vaddr(fault_addr) || !not_present){
+      printf("case 1 page fault\n");
       exit(-1);
+  }
+  struct thread* cur = thread_current();
+  if (pagedir_get_page(cur->pagedir, fault_addr) == NULL){
+      printf("case 2 page fault\n");
+      exit(-1);
+  }
 
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to
