@@ -115,13 +115,17 @@ int open(const char* file) {
   printf("o1\n");
   validity(file); 
   printf("o2\n");
+  lock_acquire(&race_lock);
   struct file *file_ = filesys_open(file);
   printf("o3\n");
-  if (file_ == NULL)
-    exit(-1);
+  if (file_ == NULL){
+    lock_release(&race_lock);
+    return -1;
+  }
   printf("o4\n");
-  struct thread *cur=thread_current();
-  struct file **fdt=cur->fd_tab;
+  struct thread *cur = thread_current();
+  struct file **fdt = cur->fd_tab;
+  /* What are these codes for?
   printf("o5\n");
   while ((cur->fd_idx<BOUND) && fdt[cur->fd_idx])
     cur->fd_idx++;
@@ -137,6 +141,12 @@ int open(const char* file) {
   if(fd==-1)
     file_close(file_);
   printf("o7\n");
+  */
+  printf("o5\n");
+  int fd = cur->fd_idx;
+  fdt[fd] = file_;
+  ++(cur->fd_idx);
+  printf("o6\n");
   return fd;
 }
 
