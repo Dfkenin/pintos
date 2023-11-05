@@ -26,12 +26,12 @@ syscall_handler (struct intr_frame *f UNUSED)
   //mod 2-1
   switch (f->eax){
     case SYS_HALT: printf("1\n"); halt(); break;
-    case SYS_EXIT: printf("2\n"); exit((int)*(uint32_t *)(f->esp+1)); break;
+    case SYS_EXIT: printf("2\n"); exit(f->edi); break;
     case SYS_EXEC: printf("3\n"); 
-      if (exec((const char *)*(uint32_t *)(f->esp+1)) == -1)
-        exit(-1); 
+      if (exec(f->edi) == -1)
+        exit(-1);
       break;
-    case SYS_WAIT: printf("4\n"); f->eax = wait((pid_t *)*(uint32_t *)(f->esp+1)); break;
+    case SYS_WAIT: printf("4\n"); f->eax = wait(f->edi); break;
     default: printf("0\n"); exit(-1); break;
   }
 }

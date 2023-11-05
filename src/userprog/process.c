@@ -148,6 +148,9 @@ start_process (void *file_name_)
     *esp -= 4;
     **(void * **)esp = 0;
 
+    if_.edi = argc;
+    if_.esi = (uint32_t)*esp + sizeof(void *);
+
     palloc_free_page (argv);
     palloc_free_page (file_name);
   }
