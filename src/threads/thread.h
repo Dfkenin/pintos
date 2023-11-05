@@ -105,6 +105,9 @@ struct thread
     struct list children;
     struct list_elem childelem;
     struct semaphore wait;
+    //mod 2-2
+    struct file** fd_tab;
+    int fd_idx;
 
     bool exit_called;
 
