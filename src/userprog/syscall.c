@@ -13,6 +13,17 @@ void halt(void);
 void exit(int status);
 pid_t exec(const char *cmd_line);
 int wait(pid_t pid);
+//mod 2-2
+bool create(const char* file, unsigned initial_size);
+bool remove(const char* file);
+int open(const char* file);
+int filesize(int fd);
+int read(int fd, void* buffer, unsigned size);
+int write(int fd, const void* buffer, unsigned size);
+void seek(int fd, unsigned position);
+unsigned tell(int fd);
+void close(int fd);
+void validity(const uint64_t *addr);
 
 void
 syscall_init (void) 
@@ -71,4 +82,45 @@ pid_t exec(const char *cmd_line){
 }
 int wait(pid_t pid){
   return process_wait(pid);
+}
+
+//mod 2-2
+bool create(const char* file, unsigned initial_size) {
+    validity(file);
+    return filesys_create(file, initial_size);
+}
+
+bool remove(const char* file) {
+    validity(file);
+    return filesys_remove(file);
+}
+
+int write(int fd, const void* buffer, unsigned size) {
+    int num;
+    struct thread cur = thread_current();
+    validity(buffer);
+    lock_acquire(&race_lock);
+    if (fd == 1) {
+        putbuf(buffer, size);
+        num = size;
+    }
+    else
+    {
+        if (fd < 0 || fd >= BOUND)
+            num = -1;
+        else {
+            num = file_write(cur->fd_tab[fd], buffer, size);
+        }
+    }
+    lock_release(&race_lock);
+    return num;
+}
+
+void validity(const uint64_t *addr)
+{
+    struct thread* cur = thread_current();
+    if (addr == NULL || !(is_user_vaddr(addr)) || pml4_get_page(cur->pml4, addr) == NULL)
+    {
+        exit(-1);
+    }
 }
