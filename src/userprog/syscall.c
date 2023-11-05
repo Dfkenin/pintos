@@ -152,22 +152,25 @@ int open(const char* file) {
 
 int filesize(int fd) {
   printf("fs1\n");
-  struct thread* cur = thread_current();
+  struct thread *cur = thread_current();
+  /*
   struct file* selected;
-  if (fd < 0 || fd >= BOUND){
+  if (fd <= 1 || fd >= BOUND){
     selected = NULL;
   }
   else{
     selected = cur->fd_tab[fd];
   }
   printf("fs2\n");
-  if (selected == NULL)
+  */
+  struct file *file_ = cur->fd_tab[fd];
+  if (file_ == NULL)
   {
     printf("fs3-1\n");
     exit(-1);
   }
   printf("fs3-2\n");
-  return file_length(selected);
+  return file_length(file_);
 }
 
 int read(int fd, void* buffer, unsigned size) {
