@@ -215,8 +215,8 @@ process_wait (tid_t child_tid UNUSED)
 
   printf("wait5");
   int exit_code = selected->exit_code;
-  list_remove(&(selected->childelem));
-  palloc_free_page(selected);
+  //list_remove(&(selected->childelem));
+  //palloc_free_page(selected);
   printf("wait6");
   return exit_code;
 }

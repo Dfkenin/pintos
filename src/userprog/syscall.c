@@ -24,14 +24,14 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
-  switch (f->eax){
+  switch (f->esp){
     case SYS_HALT: printf("1\n"); halt(); break;
-    case SYS_EXIT: printf("2\n"); exit(f->edi); break;
+    case SYS_EXIT: printf("2\n"); exit(*(f->esp+4)); break;
     case SYS_EXEC: printf("3\n"); 
-      if (exec(f->edi) == -1)
+      if (exec(*(f->esp+4)) == -1)
         exit(-1);
       break;
-    case SYS_WAIT: printf("4\n"); f->eax = wait(f->edi); break;
+    case SYS_WAIT: printf("4\n"); f->eax = wait(*(f->esp+4)); break;
     default: printf("0\n"); exit(-1); break;
   }
 }
