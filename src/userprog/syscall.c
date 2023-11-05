@@ -157,7 +157,7 @@ int read(int fd, void* buffer, unsigned size) {
   }
   else{
     if ( fd < 0 || fd >= BOUND)
-      return -1;
+      exit(-1);
     else{
       lock_acquire(&race_lock);
       num = file_read(cur->fd_tab[fd], buffer, size);
@@ -170,33 +170,33 @@ int read(int fd, void* buffer, unsigned size) {
 int write(int fd, const void* buffer, unsigned size) {
   int num;
   struct thread *cur = thread_current();
-  //printf("w1\n");
+  printf("w1\n");
   validity(buffer);
-  //printf("w2\n");
-  //printf("fd = %d\n", fd);
+  printf("w2\n");
+  printf("fd = %d\n", fd);
   if (fd == 1){
     lock_acquire(&race_lock);
-    //printf("w3-1\n");
+    printf("w3-1\n");
     putbuf(buffer, size);
     num = size;
   }
   else{
     if (fd < 0 || fd >= BOUND) {
-      //printf("w3-2\n");
+      printf("w3-2\n");
       exit(-1);
     }
     else {
       struct file *file_ = cur->fd_tab[fd];
-      //printf("w3-2\n");
+      printf("w3-2\n");
       if (file_ == NULL) exit(-1);
-      //printf("w3-4\n");
+      printf("w3-4\n");
       lock_acquire(&race_lock);
       num = file_write(file_, buffer, size);
     }
   }
-  //printf("w4\n");
+  printf("w4\n");
   lock_release(&race_lock);
-  //printf("w5\n");
+  printf("w5\n");
   return num;
 }
 
