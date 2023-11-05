@@ -1,5 +1,6 @@
 #ifndef USERPROG_SYSCALL_H
 #define USERPROG_SYSCALL_H
+#include <stdbool.h>
 
 //mod 2-1
 typedef int pid_t;
@@ -23,6 +24,5 @@ int write(int fd, const void* buffer, unsigned size);
 void seek(int fd, unsigned position);
 unsigned tell(int fd);
 void close(int fd);
-void validity(const uint32_t *addr);
 
 #endif /* userprog/syscall.h */
