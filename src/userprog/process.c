@@ -149,7 +149,7 @@ start_process (void *file_name_)
     *esp -= 4;
     **(void * **)esp = 0;
     if_.esi = (uint32_t)*esp + sizeof(void *);
-    printf("sizeof(void *) : %d", sizeof(void *));
+    //printf("sizeof(void *) : %d", sizeof(void *));
 
     palloc_free_page (argv);
     palloc_free_page (file_name);
@@ -157,7 +157,7 @@ start_process (void *file_name_)
   
   //printf("3-4\n");
 
-  //hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
+  hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its

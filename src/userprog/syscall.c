@@ -3,6 +3,8 @@
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+//mod 2-1
+#include "threads/vaddr.h"
 
 static void syscall_handler (struct intr_frame *);
 //mod 2-1
@@ -24,6 +26,10 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
+  if (!is_user_vaddr(f->edi)){
+    exit(-1);
+  }
+
   switch (f->eax){
     case SYS_HALT: halt(); break;
     case SYS_EXIT: exit((int)*(uint32_t *)(f->edi)); break;
