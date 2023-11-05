@@ -121,7 +121,7 @@ start_process (void *file_name_)
     }
 
     //2) word-align
-    for (int i = 0; i < ((int)*esp % 8); ++i){
+    for (int i = 0; i < ((int)*esp % 4); ++i){
       *esp -= 1;
       **(uint8_t **)esp = 0;
     }
@@ -139,11 +139,11 @@ start_process (void *file_name_)
     //5) argv
     *esp -= 4;
     **(char ** **)esp = *esp + 4;
+    if_.edi = *esp + 4;
 
     //6) argc
     *esp -= 4;
     **(int **)esp = argc;
-    if_.edi = argc;
 
     //7) return address
     *esp -= 4;
