@@ -47,7 +47,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
-  //printf("switch: %d\n", *(uint32_t *)f->esp);
+  printf("switch: %d\n", *(uint32_t *)f->esp);
   //printf("esp + 8: %x\n", f->esp + 8);
   //printf("value of it: %x\n", (int *)*(uint32_t *)(f->esp+8));
   //printf("it is argv, so argv[0] is : %x\n", *(int *)*(uint32_t *)(f->esp+8));
@@ -112,9 +112,9 @@ bool remove(const char* file) {
 }
 
 int open(const char* file) {
-  printf("o1\n");
+  //printf("o1\n");
   validity(file); 
-  printf("o2\n");
+  //printf("o2\n");
   lock_acquire(&race_lock);
   struct file *file_ = filesys_open(file);
   printf("o3\n");
@@ -122,7 +122,7 @@ int open(const char* file) {
     lock_release(&race_lock);
     return -1;
   }
-  printf("o4\n");
+  //printf("o4\n");
   lock_release(&race_lock);
   struct thread *cur = thread_current();
   /* What are these codes for?
@@ -142,11 +142,11 @@ int open(const char* file) {
     file_close(file_);
   printf("o7\n");
   */
-  printf("o5\n");
+  //printf("o5\n");
   int fd = cur->fd_idx;
   cur->fd_tab[fd] = file;
   ++(cur->fd_idx);
-  printf("o6\n");
+  //printf("o6\n");
   return fd;
 }
 
