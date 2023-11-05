@@ -123,8 +123,8 @@ int open(const char* file) {
     return -1;
   }
   printf("o4\n");
+  lock_release(&race_lock);
   struct thread *cur = thread_current();
-  struct file **fdt = cur->fd_tab;
   /* What are these codes for?
   printf("o5\n");
   while ((cur->fd_idx<BOUND) && fdt[cur->fd_idx])
@@ -144,7 +144,7 @@ int open(const char* file) {
   */
   printf("o5\n");
   int fd = cur->fd_idx;
-  fdt[fd] = file_;
+  cur->fd_tab[fd] = file;
   ++(cur->fd_idx);
   printf("o6\n");
   return fd;

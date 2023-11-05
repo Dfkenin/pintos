@@ -188,6 +188,12 @@ thread_create (const char *name, int priority,
   t->parent = thread_current();
   list_push_back(&t->parent->children, &t->childelem);
   t->exit_called = false;
+  //mod 2-2
+  t->fd_tab = palloc_get_page (PAL_ZERO);
+  if (t->fd_tab == NULL)
+    return TID_ERROR;
+  t->fd_idx = 2;
+
   #endif
 
   /* Stack frame for kernel_thread(). */
