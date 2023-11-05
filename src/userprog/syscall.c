@@ -46,7 +46,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
-  printf("switch: %d\n", *(uint32_t *)f->esp);
+  //printf("switch: %d\n", *(uint32_t *)f->esp);
   //printf("esp + 8: %x\n", f->esp + 8);
   //printf("value of it: %x\n", (int *)*(uint32_t *)(f->esp+8));
   //printf("it is argv, so argv[0] is : %x\n", *(int *)*(uint32_t *)(f->esp+8));
@@ -69,7 +69,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_OPEN: validity(f->esp+4); f->eax = open((const char *)*(uint32_t *)(f->esp+4)); break;
     case SYS_FILESIZE: validity(f->esp+4); f->eax = filesize((int)*(uint32_t *)(f->esp+4)); break;
     case SYS_READ: validity(f->esp+4); validity(f->esp+8); validity(f->esp+12); f->eax = read((int)*(uint32_t *)(f->esp+4),(void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
-    case SYS_WRITE: validity(f->esp+4); validity(f->esp+8); validity(f->esp+12); printf("write begin\n"); f->eax = write((int)*(uint32_t *)(f->esp+4),(const void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); printf("write end\n"); break;
+    case SYS_WRITE: validity(f->esp+4); validity(f->esp+8); validity(f->esp+12); f->eax = write((int)*(uint32_t *)(f->esp+4),(const void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
     case SYS_SEEK: validity(f->esp+4); validity(f->esp+8); seek((int)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
     case SYS_TELL: validity(f->esp+4); f->eax = tell((int)*(uint32_t *)(f->esp+4)); break;
     case SYS_CLOSE: validity(f->esp+4); close((int)*(uint32_t *)(f->esp+4)); break;
@@ -169,33 +169,33 @@ int read(int fd, void* buffer, unsigned size) {
 int write(int fd, const void* buffer, unsigned size) {
   int num;
   struct thread *cur = thread_current();
-  printf("w1\n");
+  //printf("w1\n");
   validity(buffer);
-  printf("w2\n");
-  printf("fd = %d\n", fd);
+  //printf("w2\n");
+  //printf("fd = %d\n", fd);
   if (fd == 1){
     lock_acquire(&race_lock);
-    printf("w3-1\n");
+    //printf("w3-1\n");
     putbuf(buffer, size);
     num = size;
   }
   else{
     if (fd < 0 || fd >= BOUND) {
-      printf("w3-2\n");
+      //printf("w3-2\n");
       exit(-1);
     }
     else {
       struct file *file_ = cur->fd_tab[fd];
-      printf("w3-2\n");
+      //printf("w3-2\n");
       if (file_ == NULL) exit(-1);
-      printf("w3-4\n");
+      //printf("w3-4\n");
       lock_acquire(&race_lock);
       num = file_write(file_, buffer, size);
     }
   }
-  printf("w4\n");
+  //printf("w4\n");
   lock_release(&race_lock);
-  printf("w5\n");
+  //printf("w5\n");
   return num;
 }
 
