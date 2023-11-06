@@ -148,7 +148,7 @@ int open(const char* file) {
   */
   //printf("o5\n");
   int fd = cur->fd_idx;
-  cur->fd_tab[fd] = file;
+  cur->fd_tab[fd] = file_;
   ++(cur->fd_idx);
   //printf("o6\n");
   return fd;
@@ -174,7 +174,7 @@ int filesize(int fd) {
     exit(-1);
   }
   printf("fs3-2\n");
-  int ret = file_length(selected);
+  int ret = file_length(&selected);
   printf("fs4\n");
   return ret;
 }
@@ -213,7 +213,7 @@ int read(int fd, void* buffer, unsigned size) {
         exit(-1);
       }
       printf("r3-3-4\n");
-      num = file_read(&file_, buffer, size);
+      num = file_read(file_, buffer, size);
       lock_release(&race_lock);
       printf("r3-3-5\n");
     }
@@ -245,7 +245,7 @@ int write(int fd, const void* buffer, unsigned size) {
       if (file_ == NULL) exit(-1);
       //printf("w3-4\n");
       lock_acquire(&race_lock);
-      num = file_write(&file_, buffer, size);
+      num = file_write(file_, buffer, size);
     }
   }
   //printf("w4\n");
