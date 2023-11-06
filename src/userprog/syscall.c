@@ -297,10 +297,12 @@ void close(int fd) {
   {
     selected = NULL;
   }
-  selected = cur->fd_tab[fd];
+  else{
+    selected = cur->fd_tab[fd];
+  }
   if (selected) {
     file_close(selected);
-    selected = NULL;
+    cur->fd_tab[fd] = NULL;
   }
   else {
     exit(-1);
