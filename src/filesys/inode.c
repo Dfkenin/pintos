@@ -341,5 +341,8 @@ inode_allow_write (struct inode *inode)
 off_t
 inode_length (const struct inode *inode)
 {
+  struct inode_disk data_ = inode->data;
+  printf("can get data\n");
+  printf("length is %d\n", data_.length);
   return inode->data.length;
 }
