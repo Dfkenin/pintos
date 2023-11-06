@@ -89,6 +89,9 @@ void exit(int status){
   t->exit_code = status;
   t->exit_called = true;
   printf("%s: exit(%d)\n", t->name, status);
+  //for (int i = 2; i < 128; ++i){
+  //  if (thread_current()->fd_tab[i]) close(i);
+  //}
   thread_exit();
 }
 pid_t exec(const char *cmd_line){
@@ -293,11 +296,15 @@ unsigned tell(int fd) {
 void close(int fd) {
   struct thread* cur = thread_current();
   struct file* selected;
-  if (fd < 0 || fd >= BOUND)
+  if (fd <= 1 || fd >= BOUND)
   {
     selected = NULL;
   }
   selected = cur->fd_tab[fd];
+  if (selected){
+    file_close(selected);
+    selected = NULL;
+  }
 }
 
 
