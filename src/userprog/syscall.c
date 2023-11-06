@@ -158,12 +158,15 @@ int filesize(int fd) {
   printf("fs1\n");
   struct thread* cur = thread_current();
   struct file* selected;
+  /*
   if (fd < 0 || fd >= BOUND){
     selected = NULL;
   }
   else{
     selected = cur->fd_tab[fd];
   }
+  */
+  selected = cur->fd_tab[fd];
   printf("fs2\n");
   if (selected == NULL)
   {
