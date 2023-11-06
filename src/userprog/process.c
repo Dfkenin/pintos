@@ -55,25 +55,7 @@ process_execute (const char *file_name)
   tid = thread_create (name_copy, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
-  else {
-    //mod 2-2
-    struct thread *t = thread_current();
-    struct list_elem *e = NULL;
 
-    struct list *children_list = &(t->children);  
-    struct thread *child = NULL;
-    for (e = list_begin (children_list); e != list_end (children_list);
-        e = list_next (e))
-      {
-        child = list_entry (e, struct thread, childelem);
-        //printf("%d while given %d\n", child->tid, child_tid);
-        if (child->tid == tid){
-          break;
-        }
-      }
-    
-    sema_down(&(child->load));
-  }
   //mod 1
   //palloc_free_page (name_copy);
 
@@ -125,8 +107,6 @@ start_process (void *file_name_)
   if (!success) {
     //palloc_free_page (argv);
     palloc_free_page (file_name);
-    //mod 2-2
-    sema_up(&(thread_current()->load));
     thread_exit ();
   }
   else {
@@ -173,8 +153,6 @@ start_process (void *file_name_)
 
     palloc_free_page (argv);
     palloc_free_page (file_name);
-    //mod 2-2
-    sema_up(&(thread_current()->load));
   }
   
   //printf("3-4\n");
