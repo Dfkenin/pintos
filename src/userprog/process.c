@@ -107,6 +107,8 @@ start_process (void *file_name_)
   if (!success) {
     //palloc_free_page (argv);
     palloc_free_page (file_name);
+    //mod 2-2
+    sema_up(&(thread_current()->lock))
     thread_exit ();
   }
   else {
@@ -156,6 +158,8 @@ start_process (void *file_name_)
 
     palloc_free_page (argv);
     palloc_free_page (file_name);
+    //mod 2-2
+    sema_up(&(thread_current()->lock))
   }
   
   //printf("3-4\n");

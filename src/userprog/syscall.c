@@ -108,6 +108,8 @@ pid_t exec(const char *cmd_line){
         break;
       }
     }
+
+  sema_down(&(child->lock));
   
   if (pid == -1 || !child->loaded) //error
     return -1;
