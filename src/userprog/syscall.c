@@ -5,9 +5,13 @@
 #include "threads/thread.h"
 //mod 2-1
 #include "threads/vaddr.h"
+#include "devices/shutdown.h"
+#include "userprog/process.h"
 //mod 2-2
 #include "userprog/pagedir.h"
 #include "threads/synch.h"
+#include "filesys/file.h"
+#include "filesys/filesys.h"
 #define BOTTOM 0x08048000
 
 static void syscall_handler (struct intr_frame *);
@@ -47,7 +51,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
-  //printf("switch: %d\n", *(uint32_t *)f->esp);
+  printf("switch: %d\n", *(uint32_t *)f->esp);
   //printf("esp + 8: %x\n", f->esp + 8);
   //printf("value of it: %x\n", (int *)*(uint32_t *)(f->esp+8));
   //printf("it is argv, so argv[0] is : %x\n", *(int *)*(uint32_t *)(f->esp+8));
@@ -151,7 +155,7 @@ int open(const char* file) {
 }
 
 int filesize(int fd) {
-  //printf("fs1\n");
+  printf("fs1\n");
   struct thread* cur = thread_current();
   struct file* selected;
   if (fd < 0 || fd >= BOUND){
@@ -160,13 +164,13 @@ int filesize(int fd) {
   else{
     selected = cur->fd_tab[fd];
   }
-  //printf("fs2\n");
+  printf("fs2\n");
   if (selected == NULL)
   {
-    //printf("fs3-1\n");
+    printf("fs3-1\n");
     exit(-1);
   }
-  //printf("fs3-2\n");
+  printf("fs3-2\n");
   return file_length(selected);
 }
 
