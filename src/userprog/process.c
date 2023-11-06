@@ -445,6 +445,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
         }
     }
 
+  //mod 3
+  t->run_file=file;
+  file_deny_write(file);
+
   /* Set up stack. */
   if (!setup_stack (esp))
     goto done;
@@ -456,7 +460,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
+  //mod 3
+  //file_close (file);
   return success;
 }
 
