@@ -272,14 +272,9 @@ int write(int fd, const void* buffer, unsigned size) {
 
 void seek(int fd, unsigned position) {
   struct thread *cur=thread_current();
-  struct file *file_;
-  if ( fd < 0 || fd > BOUND)
-    file_ = NULL;
-  else{
-    file_ = cur->fd_tab[fd];
-  }
-  if (file_ <= 2)
-    return;
+  struct file *file_ = cur->fd_tab[fd];
+  if (file_)
+    file_seek(file_, position);
 }
 
 unsigned tell(int fd) {
