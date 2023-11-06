@@ -293,11 +293,15 @@ unsigned tell(int fd) {
 void close(int fd) {
   struct thread* cur = thread_current();
   struct file* selected;
-  if (fd < 0 || fd >= BOUND)
+  if (fd <= 1 || fd >= BOUND)
   {
     selected = NULL;
   }
   selected = cur->fd_tab[fd];
+  if (selected) {
+    file_close(selected);
+    selected = NULL;
+  }
 }
 
 
