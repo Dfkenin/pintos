@@ -167,7 +167,7 @@ int filesize(int fd) {
   }
   */
   selected = cur->fd_tab[fd];
-  printf("fs2\n");
+  printf("fs2 with fd : %d\n", fd);
   if (selected == NULL)
   {
     printf("fs3-1\n");
@@ -204,7 +204,7 @@ int read(int fd, void* buffer, unsigned size) {
       exit(-1);
     }
     else{
-      printf("r3-3-1\n");
+      printf("r3-3-1 with fd : %d\n", fd);
       file_ = cur->fd_tab[fd];
       printf("r3-3-2\n");
       if (file_ == NULL){
