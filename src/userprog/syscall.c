@@ -171,7 +171,9 @@ int filesize(int fd) {
     exit(-1);
   }
   printf("fs3-2\n");
-  return file_length(selected);
+  int ret = file_length(selected);
+  printf("fs4\n");
+  return ret;
 }
 
 int read(int fd, void* buffer, unsigned size) {
