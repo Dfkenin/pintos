@@ -111,6 +111,7 @@ struct thread
     //mod 2-2
     struct file** fd_tab;
     int fd_idx;
+    struct semaphore load;
 
 
 #endif
