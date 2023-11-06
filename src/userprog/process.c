@@ -238,7 +238,6 @@ process_exit (void)
 
   //mod 2-2
   palloc_free_page (cur->fd_tab);
-  //palloc_free_multiple(cur->fd_tab, FDT_PAGES);
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
