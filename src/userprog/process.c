@@ -257,6 +257,8 @@ process_exit (void)
 
   //mod 2-1
   sema_up(&(cur->wait));
+  //mod 3
+  file_close(cur->run_file);
   sema_down(&(cur->exit));
 }
 
