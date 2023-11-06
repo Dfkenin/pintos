@@ -155,10 +155,12 @@ page_fault (struct intr_frame *f)
 
   //mod 2-1
   if (fault_addr == NULL || !is_user_vaddr(fault_addr) || !not_present){
+      printf("page fault exit 1");
       exit(-1);
   }
   struct thread* cur = thread_current();
   if (pagedir_get_page(cur->pagedir, fault_addr) == NULL){
+      printf("page fault exit 2");
       exit(-1);
   }
 

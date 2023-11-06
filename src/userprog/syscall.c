@@ -51,7 +51,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   //thread_exit ();
 
   //mod 2-1
-  printf("switch: %d\n", *(uint32_t *)f->esp);
+  //printf("switch: %d\n", *(uint32_t *)f->esp);
   //printf("esp + 8: %x\n", f->esp + 8);
   //printf("value of it: %x\n", (int *)*(uint32_t *)(f->esp+8));
   //printf("it is argv, so argv[0] is : %x\n", *(int *)*(uint32_t *)(f->esp+8));
