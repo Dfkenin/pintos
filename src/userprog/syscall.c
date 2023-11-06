@@ -302,6 +302,9 @@ void close(int fd) {
     file_close(selected);
     selected = NULL;
   }
+  else {
+    exit(-1);
+  }
 }
 
 
