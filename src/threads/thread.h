@@ -114,6 +114,8 @@ struct thread
     bool loaded;
     struct semaphore load;
     struct semaphore exit;
+    //mod 3
+    struct file *run_file;
 
 
 #endif
