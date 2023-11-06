@@ -57,7 +57,7 @@ process_execute (const char *file_name)
     palloc_free_page (fn_copy); 
 
   //mod 1
-  //palloc_free_page (name_copy);
+  palloc_free_page (name_copy);
 
   //printf("4\n");
 
