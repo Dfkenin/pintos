@@ -145,6 +145,8 @@ off_t
 file_length (struct file *file) 
 {
   ASSERT (file != NULL);
+  printf("here pos %d\n", file->pos);
+  printf("length %d\n", file->inode->data.lengths);
   return inode_length (file->inode);
 }
 
