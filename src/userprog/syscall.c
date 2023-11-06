@@ -90,7 +90,8 @@ void exit(int status){
   t->exit_called = true;
   printf("%s: exit(%d)\n", t->name, status);
   for (int i = 2; i < 128; ++i){
-    close(i);
+    if (thread_current()->fd_tab[i] != NULL)
+      close(i);
   }
   thread_exit();
 }
