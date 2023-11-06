@@ -107,12 +107,12 @@ int wait(pid_t pid){
 //mod 2-2
 bool create(const char* file, unsigned initial_size) {
   validity(file);
-  return filesys_create(file, initial_size);
+  return filesys_create(&file, initial_size);
 }
 
 bool remove(const char* file) {
   validity(file);
-  return filesys_remove(file);
+  return filesys_remove(&file);
 }
 
 int open(const char* file) {
@@ -120,7 +120,7 @@ int open(const char* file) {
   validity(file); 
   //printf("o2\n");
   lock_acquire(&race_lock);
-  struct file *file_ = filesys_open(file);
+  struct file *file_ = filesys_open(&file);
   //printf("o3\n");
   if (file_ == NULL){
     lock_release(&race_lock);
@@ -174,8 +174,7 @@ int filesize(int fd) {
     exit(-1);
   }
   printf("fs3-2\n");
-  printf("%d\n", selected->pos);
-  int ret = file_length(selected);
+  int ret = file_length(&selected);
   printf("fs4\n");
   return ret;
 }
@@ -214,7 +213,7 @@ int read(int fd, void* buffer, unsigned size) {
         exit(-1);
       }
       printf("r3-3-4\n");
-      num = file_read(file_, buffer, size);
+      num = file_read(&file_, buffer, size);
       lock_release(&race_lock);
       printf("r3-3-5\n");
     }
@@ -246,7 +245,7 @@ int write(int fd, const void* buffer, unsigned size) {
       if (file_ == NULL) exit(-1);
       //printf("w3-4\n");
       lock_acquire(&race_lock);
-      num = file_write(file_, buffer, size);
+      num = file_write(&file_, buffer, size);
     }
   }
   //printf("w4\n");
@@ -277,7 +276,7 @@ unsigned tell(int fd) {
   }
   if(file_ <= 2)
     return;
-  return file_tell(file_);
+  return file_tell(&file_);
 }
 
 void close(int fd) {
