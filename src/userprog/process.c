@@ -257,6 +257,8 @@ process_exit (void)
 
   //mod 2-1
   sema_up(&(cur->wait));
+  //mod 3
+  file_close(cur->run_file);
   sema_down(&(cur->exit));
 }
 
@@ -444,6 +446,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
           break;
         }
     }
+
+  //mod 3
+  t->run_file = file;
+  file_deny_write(file);
 
   /* Set up stack. */
   if (!setup_stack (esp))
