@@ -106,7 +106,7 @@ start_process (void *file_name_)
   
   //mod 1
   if (!success) {
-    //palloc_free_page (argv);
+    palloc_free_page (argv);
     palloc_free_page (file_name);
     //mod 2-2
     sema_up(&(thread_current()->load));
@@ -218,6 +218,7 @@ process_wait (tid_t child_tid UNUSED)
         int exit_code = child->exit_code;
         //printf("wait5\n");
         list_remove(&(child->childelem));
+        palloc_free_page(child);
         //printf("wait6\n");
         sema_up(&(child->exit));
         //printf("wait7\n");
@@ -236,7 +237,8 @@ process_exit (void)
   uint32_t *pd;
 
   //mod 2-2
-  palloc_free_page (cur->fd_tab);
+  //palloc_free_page (cur->fd_tab);
+  palloc_free_multiple(cur->fd_tab, FDT_PAGES);
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
