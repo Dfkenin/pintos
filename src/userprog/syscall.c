@@ -89,6 +89,9 @@ void exit(int status){
   t->exit_code = status;
   t->exit_called = true;
   printf("%s: exit(%d)\n", t->name, status);
+  for (int i = 2; i < 128; ++i){
+    close(i);
+  }
   thread_exit();
 }
 pid_t exec(const char *cmd_line){
