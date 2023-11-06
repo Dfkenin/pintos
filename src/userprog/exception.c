@@ -158,13 +158,13 @@ page_fault (struct intr_frame *f)
       printf("page fault exit 1");
       exit(-1);
   }
-  /*
+  
   struct thread* cur = thread_current();
   if (pagedir_get_page(cur->pagedir, fault_addr) == NULL){
       printf("page fault exit 2");
       exit(-1);
   }
-  */
+  
 
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to
