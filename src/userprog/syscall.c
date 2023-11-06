@@ -93,8 +93,23 @@ void exit(int status){
 }
 pid_t exec(const char *cmd_line){
   pid_t pid = process_execute(cmd_line);
+
+  struct thread *t = thread_current();
+  struct list_elem *e = NULL;
+
+  struct list *children_list = &(t->children);  
+  struct thread *child = NULL;
+  for (e = list_begin (children_list); e != list_end (children_list);
+       e = list_next (e))
+    {
+      child = list_entry (e, struct thread, childelem);
+      //printf("%d while given %d\n", child->tid, child_tid);
+      if (child->tid == pid){
+        break;
+      }
+    }
   
-  if (pid == -1) //error
+  if (pid == -1 || !child->loaded) //error
     return -1;
   return pid;
 }

@@ -110,6 +110,9 @@ start_process (void *file_name_)
     thread_exit ();
   }
   else {
+    //mod 2-2
+    thread_current()->loaded = true;
+
     void **esp = &if_.esp;
     //1) argv[i][...]
     for (int i = argc - 1; i >= 0; --i){

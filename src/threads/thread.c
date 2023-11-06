@@ -193,6 +193,7 @@ thread_create (const char *name, int priority,
   if (t->fd_tab == NULL)
     return TID_ERROR;
   t->fd_idx = 2;
+  t->loaded = false;
 
   #endif
 
