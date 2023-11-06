@@ -187,6 +187,7 @@ process_wait (tid_t child_tid UNUSED)
   //while (1) {}
   //return -1;
   //mod 2-1
+  print("wait1\n");
   struct thread *t = thread_current();
   struct list_elem *e = NULL;
 
@@ -194,6 +195,7 @@ process_wait (tid_t child_tid UNUSED)
   if (children_list == NULL)
     return -1;
   
+  print("wait2\n");
   struct thread *child = NULL;
   for (e = list_begin (children_list); e != list_end (children_list);
        e = list_next (e))
@@ -201,16 +203,20 @@ process_wait (tid_t child_tid UNUSED)
       child = list_entry (e, struct thread, childelem);
       //printf("%d while given %d\n", child->tid, child_tid);
       if (child->tid == child_tid){
+        print("wait3\n");
         sema_down(&(child->wait));
+        print("wait4\n");
         if (!child->exit_called){
-          //printf("no exit called");
+          printf("no exit called");
           return -1;
         }
         int exit_code = child->exit_code;
+        print("wait5\n");
         //list_remove(&(child->childelem));
         return exit_code;
       }
     }
+  print("wait0\n");
   return -1;
 }
 
