@@ -113,6 +113,7 @@ pid_t exec(const char *cmd_line){
   
   if (pid == -1 || !child->loaded) //error
     return -1;
+  
   return pid;
 }
 int wait(pid_t pid){

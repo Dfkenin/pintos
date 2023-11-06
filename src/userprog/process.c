@@ -73,7 +73,7 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
-  printf("%s\n", file_name);
+  //printf("%s\n", file_name);
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -201,28 +201,33 @@ process_wait (tid_t child_tid UNUSED)
     return -1;
   
   printf("wait2\n");
-  struct thread *child = NULL;
+  struct thread *child;
+  struct thread *selected = NULL;
   for (e = list_begin (children_list); e != list_end (children_list);
        e = list_next (e))
     {
       child = list_entry (e, struct thread, childelem);
-      //printf("%d while given %d\n", child->tid, child_tid);
+      printf("%d while given %d\n", child->tid, child_tid);
       if (child->tid == child_tid){
-        printf("wait3\n");
-        sema_down(&(child->wait));
-        printf("wait4\n");
-        if (!child->exit_called){
-          printf("no exit called");
-          return -1;
-        }
-        int exit_code = child->exit_code;
-        printf("wait5\n");
-        //list_remove(&(child->childelem));
-        return exit_code;
+        selected = child;
+        break;
       }
     }
-  printf("wait0\n");
-  return -1;
+  
+  if (selected == NULL) return -1;
+  if (!selected->loaded) return -1;
+  
+  printf("wait3\n");
+  sema_down(&(selected->wait));
+  printf("wait4\n");
+  if (!selected->exit_called){
+    printf("no exit called");
+    return -1;
+  }
+  int exit_code = selected->exit_code;
+  printf("wait5\n");
+  list_remove(e);
+  return exit_code;
 }
 
 /* Free the current process's resources. */
