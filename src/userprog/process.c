@@ -202,32 +202,30 @@ process_wait (tid_t child_tid UNUSED)
   
   printf("wait2\n");
   struct thread *child;
-  struct thread *selected = NULL;
   for (e = list_begin (children_list); e != list_end (children_list);
        e = list_next (e))
     {
       child = list_entry (e, struct thread, childelem);
-      printf("%d while given %d\n", child->tid, child_tid);
+      //printf("%d while given %d\n", child->tid, child_tid);
       if (child->tid == child_tid){
-        selected = child;
-        break;
+        printf("wait3\n");
+        sema_down(&(child->wait));
+        printf("wait4\n");
+        if (!child->exit_called){
+          printf("no exit called");
+          return -1;
+        }
+        int exit_code = child->exit_code;
+        printf("wait5\n");
+        list_remove(&(child->childelem));
+        printf("wait6\n");
+        sema_up(&(child->exit));
+        printf("wait7\n");
+        return exit_code;
       }
     }
-  
-  if (selected == NULL) return -1;
-  if (!selected->loaded) return -1;
-  
-  printf("wait3\n");
-  sema_down(&(selected->wait));
-  printf("wait4\n");
-  if (!selected->exit_called){
-    printf("no exit called");
-    return -1;
-  }
-  int exit_code = selected->exit_code;
-  printf("wait5\n");
-  list_remove(e);
-  return exit_code;
+  printf("wait0\n");
+  return -1;
 }
 
 /* Free the current process's resources. */
@@ -259,6 +257,7 @@ process_exit (void)
 
   //mod 2-1
   sema_up(&(cur->wait));
+  sema_down(&(cur->exit));
 }
 
 /* Sets up the CPU for running user code in the current

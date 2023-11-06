@@ -113,6 +113,7 @@ struct thread
     int fd_idx;
     bool loaded;
     struct semaphore load;
+    struct semaphore exit;
 
 
 #endif
