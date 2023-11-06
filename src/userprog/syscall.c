@@ -107,12 +107,12 @@ int wait(pid_t pid){
 //mod 2-2
 bool create(const char* file, unsigned initial_size) {
   validity(file);
-  return filesys_create(&file, initial_size);
+  return filesys_create(file, initial_size);
 }
 
 bool remove(const char* file) {
   validity(file);
-  return filesys_remove(&file);
+  return filesys_remove(file);
 }
 
 int open(const char* file) {
@@ -120,7 +120,7 @@ int open(const char* file) {
   validity(file); 
   //printf("o2\n");
   lock_acquire(&race_lock);
-  struct file *file_ = filesys_open(&file);
+  struct file *file_ = filesys_open(file);
   //printf("o3\n");
   if (file_ == NULL){
     lock_release(&race_lock);
@@ -276,7 +276,7 @@ unsigned tell(int fd) {
   }
   if(file_ <= 2)
     return;
-  return file_tell(&file_);
+  return file_tell(file_);
 }
 
 void close(int fd) {
