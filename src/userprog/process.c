@@ -106,7 +106,7 @@ start_process (void *file_name_)
   
   //mod 1
   if (!success) {
-    //palloc_free_page (argv);
+    palloc_free_page (argv);
     palloc_free_page (file_name);
     //mod 2-2
     sema_up(&(thread_current()->load));
@@ -257,19 +257,6 @@ process_exit (void)
 
   //mod 2-1
   sema_up(&(cur->wait));
-  sema_down(&(cur->exit));
-}
-
-/* Sets up the CPU for running user code in the current
-   thread.
-   This function is called on every context switch. */
-void
-process_activate (void)
-{
-  struct thread *t = thread_current ();
-
-  /* Activate thread's page tables.  //mod 3
-  file_close(cur->run_file);
   sema_down(&(cur->exit));
 }
 
@@ -458,10 +445,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
         }
     }
 
-  //mod 3
-  t->run_file=file;
-  file_deny_write(file);
-
   /* Set up stack. */
   if (!setup_stack (esp))
     goto done;
@@ -475,7 +458,23 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* We arrive here whether the load is successful or not. */
   //mod 3
   //file_close (file);
-p_offset must point within FILE. */
+  return success;
+}
+
+/* load() helpers. */
+
+static bool install_page (void *upage, void *kpage, bool writable);
+
+/* Checks whether PHDR describes a valid, loadable segment in
+   FILE and returns true if so, false otherwise. */
+static bool
+validate_segment (const struct Elf32_Phdr *phdr, struct file *file) 
+{
+  /* p_offset and p_vaddr must have the same page offset. */
+  if ((phdr->p_offset & PGMASK) != (phdr->p_vaddr & PGMASK)) 
+    return false; 
+
+  /* p_offset must point within FILE. */
   if (phdr->p_offset > (Elf32_Off) file_length (file)) 
     return false;
 
