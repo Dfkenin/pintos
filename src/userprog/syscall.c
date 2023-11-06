@@ -174,7 +174,8 @@ int filesize(int fd) {
     exit(-1);
   }
   printf("fs3-2\n");
-  int ret = file_length(&selected);
+  printf("%d\n", selected->pos);
+  int ret = file_length(selected);
   printf("fs4\n");
   return ret;
 }
