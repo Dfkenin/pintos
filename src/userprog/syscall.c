@@ -64,10 +64,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   switch (*(uint32_t *)f->esp){
     case SYS_HALT: halt(); break;
     case SYS_EXIT: for_valid(f->esp+4, 1); exit((int)*(uint32_t *)(f->esp+4)); break;
-    case SYS_EXEC: for_valid(f->esp+4, 1); 
-      if (exec((const char *)*(uint32_t *)(f->esp+4)) == -1)
-        exit(-1);
-      break;
+    case SYS_EXEC: for_valid(f->esp+4, 1); f->eax = exec((const char *)*(uint32_t *)(f->esp+4)); break;
     case SYS_WAIT: for_valid(f->esp+4, 1); f->eax = wait((pid_t)*(uint32_t *)(f->esp+4)); break;
     case SYS_CREATE: for_valid(f->esp+4, 2); f->eax = create((const char *)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
     case SYS_REMOVE: for_valid(f->esp+4, 1); f->eax = remove((const char *)*(uint32_t *)(f->esp+4)); break;
@@ -155,7 +152,7 @@ int open(const char* file) {
 }
 
 int filesize(int fd) {
-  printf("fs1\n");
+  //printf("fs1\n");
   struct thread* cur = thread_current();
   struct file* selected;
   /*
