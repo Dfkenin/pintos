@@ -194,8 +194,6 @@ thread_create (const char *name, int priority,
     return TID_ERROR;
   t->fd_idx = 2;
   t->loaded = false;
-  //mod 3
-  t->run_file=NULL;
 
   #endif
 
@@ -488,6 +486,8 @@ init_thread (struct thread *t, const char *name, int priority)
   sema_init(&(t->load), 0);
   sema_init(&(t->exit), 0);
   #endif
+  //mod 3
+  t->run_file=NULL;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
