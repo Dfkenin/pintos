@@ -1,27 +1,41 @@
 #ifndef USERPROG_SYSCALL_H
 #define USERPROG_SYSCALL_H
-#include <stdbool.h>
 
-//mod 2-1
-typedef int pid_t;
+#include <stdbool.h>
+#include <list.h>
+#include "threads/interrupt.h"
+#include "threads/synch.h"
+#include "filesys/directory.h"
+#include "filesys/file.h"
+#include "filesys/filesys.h"
+#include "filesys/fsutil.h"
+#include "filesys/inode.h"
+#include "filesys/off_t.h"
+
+struct fd_elem {
+  int fd;
+  struct file* file_ptr;
+  struct list_elem elem;
+};
+
+void kill_process(void);
+
+struct lock file_lock;
 
 void syscall_init (void);
 
-//mod 2-1
-void halt(void);
-void exit(int status);
-pid_t exec(const char *cmd_line);
-int wait(pid_t pit);
-
-//mod 2-2
-bool create(const char* file, unsigned initial_size);
-bool remove(const char* file);
-int open(const char* file);
-int filesize(int fd);
-int read(int fd, void* buffer, unsigned size);
-int write(int fd, const void* buffer, unsigned size);
-void seek(int fd, unsigned position);
-unsigned tell(int fd);
-void close(int fd);
+void sys_halt (struct intr_frame * f);
+void sys_exit (struct intr_frame * f);
+void sys_exec (struct intr_frame * f);
+void sys_wait (struct intr_frame * f);
+void sys_create (struct intr_frame * f);
+void sys_remove (struct intr_frame * f);
+void sys_open (struct intr_frame * f);
+void sys_filesize (struct intr_frame * f);
+void sys_read (struct intr_frame * f);
+void sys_write (struct intr_frame * f);
+void sys_seek (struct intr_frame * f);
+void sys_tell (struct intr_frame * f);
+void sys_close (struct intr_frame * f);
 
 #endif /* userprog/syscall.h */

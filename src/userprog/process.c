@@ -8,6 +8,7 @@
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
+#include "userprog/signal.h"
 #include "filesys/directory.h"
 #include "filesys/file.h"
 #include "filesys/filesys.h"
@@ -17,6 +18,8 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "threads/malloc.h"
+#include "userprog/syscall.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -29,38 +32,22 @@ tid_t
 process_execute (const char *file_name) 
 {
   char *fn_copy;
+  char *save_ptr;
   tid_t tid;
-
+  
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
+  memset(fn_copy, 0, PGSIZE);
   strlcpy (fn_copy, file_name, PGSIZE);
-
-  //printf("1\n");
-
-  //mod 1
-  char *name_copy;
-  name_copy = palloc_get_page (0);
-  if (name_copy == NULL)
-    return TID_ERROR;
-  strlcpy (name_copy, file_name, PGSIZE);
-  char *next_null;
-  name_copy = strtok_r(name_copy, " ", &next_null);
-
-  //printf("2\n");
-
+  
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (name_copy, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (strtok_r(fn_copy, " ", &save_ptr), PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
-
-  //mod 1
-  palloc_free_page (name_copy);
-
-  //printf("4\n");
-
+    palloc_free_page (fn_copy);
+  
   return tid;
 }
 
@@ -69,103 +56,70 @@ process_execute (const char *file_name)
 static void
 start_process (void *file_name_)
 {
-  //printf("3-1\n");
-  char *file_name = file_name_;
+  int file_name_len;
+  char *token;
+  char *save_ptr;
+  int argc = 0;
+  int i = 0;
+  
+  char *file_name = strtok_r(file_name_, " ", &save_ptr);
   struct intr_frame if_;
   bool success;
-  //printf("%s\n", file_name);
-
+  
+  void **esp = &if_.esp;
+  
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-
-
-  //printf("3-2\n");
-
-  //mod 1
-  char **argv = palloc_get_page (0);
-  int argc = 0;
-
-  char *cur_str;
-  char *next;
-
-  cur_str = strtok_r(file_name, " ", &next);
-  while (cur_str != NULL) {
-    argv[argc] = cur_str;
-    
-    cur_str = strtok_r(NULL, " ", &next); ++argc;
-  }
-
-  //printf("3-3\n");
-
-  success = load (argv[0], &if_.eip, &if_.esp);
-
-  /* If load failed, quit. */
+  success = load (file_name_, &if_.eip, &if_.esp);
   
-  //mod 1
+  /* If load failed, quit. */
   if (!success) {
-    palloc_free_page (argv);
+    send_signal(-1, SIG_EXEC);
     palloc_free_page (file_name);
-    //mod 2-2
-    sema_up(&(thread_current()->load));
     thread_exit ();
   }
-  else {
-    //mod 2-2
-    thread_current()->loaded = true;
-
-    void **esp = &if_.esp;
-    //1) argv[i][...]
-    for (int i = argc - 1; i >= 0; --i){
-      int len = strlen(argv[i]);
-      *esp -= len + 1;
-      strlcpy (*esp, argv[i], len + 1);
-
-      argv[i] = (uint32_t *)*esp;
-    }
-
-    //2) word-align
-    for (int i = 0; i < ((int)*esp % 4); ++i){
-      *esp -= 1;
-      **(uint8_t **)esp = 0;
-    }
-
-    //3) argv[n] = 0
-    *esp -= 4;
-    **(uint32_t **)esp = 0;
-
-    //4) argv[i]
-    for (int i = argc - 1; i >= 0; --i){
-      *esp -= 4;
-      **(uint32_t **)esp = argv[i];
-    }
-
-    //5) argv
-    *esp -= 4;
-    **(uint32_t **)esp = *esp + 4;
-    if_.edi = *esp + 4;
-
-    //6) argc
-    *esp -= 4;
-    **(uint32_t **)esp = argc;
-
-    //7) return address
-    *esp -= 4;
-    **(void * **)esp = 0;
-    if_.esi = (uint32_t)*esp + sizeof(void *);
-    //printf("sizeof(void *) : %d", sizeof(void *));
-
-    palloc_free_page (argv);
-    palloc_free_page (file_name);
-    //mod 2-2
-    sema_up(&(thread_current()->load));
+  
+  /* Copy command to stack */
+  *(file_name + strlen(file_name)) = ' ';
+  if(save_ptr == file_name + strlen(file_name) - 1) *(save_ptr) = '\0';
+  else *(save_ptr) = ' ';
+  file_name_len = strlen(file_name) + 1;
+  *esp -= file_name_len;
+  *esp -= (unsigned)(*esp) % 4; // align memory
+  strlcpy (*esp, file_name, file_name_len);
+  
+  palloc_free_page (file_name);
+  file_name = (char*)(*esp);
+  save_ptr = file_name;
+   
+  /* Argument Passing */
+  for (token = strtok_r (NULL, " ", &save_ptr); token != NULL;
+       token = strtok_r (NULL, " ", &save_ptr)) {
+    while(*save_ptr == ' ') save_ptr++;
+    argc++; // swap delimiter to null terminations
   }
   
-  //printf("3-4\n");
-
-  //hex_dump(if_.esp, if_.esp, PHYS_BASE - if_.esp, true);
+  *esp -= sizeof(char*);
+  *(void**)(*esp) = NULL; // argv[argc]
+  *esp -= sizeof(char*) * argc;
+  save_ptr = file_name;
+  for (i = 0; i < argc; i++) {
+    *(char**)((*esp) + sizeof(void*) * i) = save_ptr;
+    save_ptr = save_ptr + strlen(save_ptr) + 1;
+    while(*save_ptr == ' ') save_ptr++;
+  }
+  *esp -= sizeof(void*);
+  *(void**)(*esp) = *esp + sizeof(void*);
+  *esp -= sizeof(int);
+  *(int*)(*esp) = argc;
+  *esp -= sizeof(void*);
+  *(void**)(*esp) = NULL; // fake ret
+  
+  send_signal(thread_current()->tid, SIG_EXEC);
+  
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -186,46 +140,11 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-  //mod 1
-  //while (1) {}
-  //return -1;
-  //mod 2-1
-  //printf("wait1\n");
-  struct thread *t = thread_current();
-  struct list_elem *e = NULL;
-
-  struct list *children_list = &(t->children);
-  if (children_list == NULL)
-    return -1;
-  
-  //printf("wait2\n");
-  struct thread *child;
-  for (e = list_begin (children_list); e != list_end (children_list);
-       e = list_next (e))
-    {
-      child = list_entry (e, struct thread, childelem);
-      //printf("%d while given %d\n", child->tid, child_tid);
-      if (child->tid == child_tid){
-        //printf("wait3\n");
-        sema_down(&(child->wait));
-        //printf("wait4\n");
-        if (!child->exit_called){
-          //printf("no exit called");
-          return -1;
-        }
-        int exit_code = child->exit_code;
-        //printf("wait5\n");
-        list_remove(&(child->childelem));
-        //printf("wait6\n");
-        sema_up(&(child->exit));
-        //printf("wait7\n");
-        return exit_code;
-      }
-    }
-  //printf("wait0\n");
-  return -1;
+  //struct thread *cur = thread_current();
+  int result = get_signal(child_tid, SIG_WAIT);
+  return result;
 }
 
 /* Free the current process's resources. */
@@ -234,10 +153,32 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-
-  //mod 2-2
-  palloc_free_page (cur->fd_tab);
-
+  struct signal *sig;
+  struct fd_elem *f_e;
+  struct list_elem *e;
+  
+  if(cur->parent) list_remove(&cur->p_elem);
+  
+  for (e = list_begin (&cur->signal_list); e != list_end (&cur->signal_list); )
+  {
+    sig = list_entry (e, struct signal, elem);
+    e = list_remove(e);
+    free(sig);
+  }
+  
+  if (cur->current_file != NULL) {
+    file_allow_write(cur->current_file);
+    file_close(cur->current_file);
+  }
+  
+  for (e = list_begin (&cur->fd_table); e != list_end (&cur->fd_table); )
+  {
+    f_e = list_entry (e, struct fd_elem, elem);
+    e = list_remove(e);
+    file_close(f_e->file_ptr);
+    free(f_e);
+  }
+  
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -254,12 +195,6 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-
-  //mod 2-1
-  sema_up(&(cur->wait));
-  //mod 3
-  file_close(cur->run_file);
-  sema_down(&(cur->exit));
 }
 
 /* Sets up the CPU for running user code in the current
@@ -360,13 +295,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofs;
   bool success = false;
   int i;
-
+  
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-
+  
   /* Open executable file. */
   file = filesys_open (file_name);
   if (file == NULL) 
@@ -374,6 +309,9 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
+  else {
+    file_deny_write(file);
+  }
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
@@ -387,7 +325,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: error loading executable\n", file_name);
       goto done; 
     }
-
+  
   /* Read program headers. */
   file_ofs = ehdr.e_phoff;
   for (i = 0; i < ehdr.e_phnum; i++) 
@@ -447,10 +385,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
         }
     }
 
-  //mod 3
-  t->run_file = file;
-  file_deny_write(file);
-
   /* Set up stack. */
   if (!setup_stack (esp))
     goto done;
@@ -462,8 +396,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  //mod 3
-  //file_close (file);
+  t->current_file = file;
   return success;
 }
 

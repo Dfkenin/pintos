@@ -1,332 +1,422 @@
 #include "userprog/syscall.h"
 #include <stdio.h>
 #include <syscall-nr.h>
-#include "threads/interrupt.h"
 #include "threads/thread.h"
-//mod 2-1
-#include "threads/vaddr.h"
 #include "devices/shutdown.h"
+#include "devices/input.h"
+#include "userprog/signal.h"
 #include "userprog/process.h"
-//mod 2-2
-#include "userprog/pagedir.h"
-#include "threads/synch.h"
-#include "filesys/file.h"
-#include "filesys/filesys.h"
-#define BOTTOM 0x08048000
+#include "threads/malloc.h"
+#include "threads/vaddr.h"
 
 static void syscall_handler (struct intr_frame *);
-//mod 2-1
-void halt(void);
-void exit(int status);
-pid_t exec(const char *cmd_line);
-int wait(pid_t pid);
-//mod 2-2
-struct lock race_lock;
 
-bool create(const char* file, unsigned initial_size);
-bool remove(const char* file);
-int open(const char* file);
-int filesize(int fd);
-int read(int fd, void* buffer, unsigned size);
-int write(int fd, const void* buffer, unsigned size);
-void seek(int fd, unsigned position);
-unsigned tell(int fd);
-void close(int fd);
-void validity(const uint32_t *addr);
-void for_valid(const uint32_t *addr, int num);
+static int get_user(const uint8_t *uaddr);
+static bool put_user(uint8_t *udst, uint8_t byte);
+struct file* get_file_from_fd(int fd);
+bool validate_read(void *p, int size);
+bool validate_write(void *p, int size);
+
+static void (*syscall_table[20])(struct intr_frame*) = {
+  sys_halt,
+  sys_exit,
+  sys_exec,
+  sys_wait,
+  sys_create,
+  sys_remove,
+  sys_open,
+  sys_filesize,
+  sys_read,
+  sys_write,
+  sys_seek,
+  sys_tell,
+  sys_close
+}; // syscall jmp table
+
+/* Reads a byte at user virtual address UADDR.
+  UADDR must be below PHYS_BASE.
+  Returns the byte value if successful, -1 if a segfault
+  occurred. */
+static int
+get_user (const uint8_t *uaddr)
+{
+  int result;
+  asm ("movl $1f, %0; movzbl %1, %0; 1:"
+        : "=&a" (result) : "m" (*uaddr));
+  return result;
+}
+
+/* Writes BYTE to user address UDST.
+  UDST must be below PHYS_BASE.
+  Returns true if successful, false if a segfault occurred. */
+static bool
+put_user (uint8_t *udst, uint8_t byte)
+{
+  int error_code;
+  asm ("movl $1f, %0; movb %b2, %1; 1:"
+        : "=&a" (error_code), "=m" (*udst) : "q" (byte));
+  return error_code != -1;
+}
+
+struct file* get_file_from_fd(int fd) {
+
+  struct list_elem *e;
+  struct thread *t = thread_current();
+  struct fd_elem *fd_elem;
+
+  for (e = list_begin (&t->fd_table); e != list_end (&t->fd_table);
+       e = list_next (e))
+  {
+    fd_elem = list_entry (e, struct fd_elem, elem);
+    if(fd_elem->fd == fd)
+      return fd_elem->file_ptr;
+  }
+  return NULL;
+}
+
+bool validate_read(void *p, int size) {
+  int i = 0;
+  if(p >= PHYS_BASE || p + size >= PHYS_BASE) return false;
+  for(i = 0; i < size; i++) {
+    if(get_user(p + i) == -1)
+      return false;
+  }
+  return true;
+}
+
+bool validate_write(void *p, int size) {
+  int i = 0;
+  if(p >= PHYS_BASE || p + size >= PHYS_BASE) return false;
+  for(i = 0; i < size; i++) {
+    if(put_user(p + i, 0) == false)
+      return false;
+  }
+  return true;
+}
+
+void kill_process() {
+  send_signal(-1, SIG_WAIT);
+  printf ("%s: exit(%d)\n", thread_current()->name, -1);
+  thread_exit();
+}
 
 void
 syscall_init (void) 
 {
+  lock_init(&file_lock);
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
-
-  //mod 2-2
-  lock_init(&race_lock);
 }
 
 static void
-syscall_handler (struct intr_frame *f UNUSED) 
-{
-  //printf ("system call!\n");
-  //thread_exit ();
-
-  //mod 2-1
-  //printf("switch: %d\n", *(uint32_t *)f->esp);
-  //printf("esp + 8: %x\n", f->esp + 8);
-  //printf("value of it: %x\n", (int *)*(uint32_t *)(f->esp+8));
-  //printf("it is argv, so argv[0] is : %x\n", *(int *)*(uint32_t *)(f->esp+8));
-  //printf("edi: %x\n", f->edi);
-
-  //hex_dump(f->esp, f->esp, PHYS_BASE - f->esp, true);
-
-  validity(f->esp); 
-
-  switch (*(uint32_t *)f->esp){
-    case SYS_HALT: halt(); break;
-    case SYS_EXIT: for_valid(f->esp+4, 1); exit((int)*(uint32_t *)(f->esp+4)); break;
-    case SYS_EXEC: for_valid(f->esp+4, 1); f->eax = exec((const char *)*(uint32_t *)(f->esp+4)); break;
-    case SYS_WAIT: for_valid(f->esp+4, 1); f->eax = wait((pid_t)*(uint32_t *)(f->esp+4)); break;
-    case SYS_CREATE: for_valid(f->esp+4, 2); f->eax = create((const char *)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
-    case SYS_REMOVE: for_valid(f->esp+4, 1); f->eax = remove((const char *)*(uint32_t *)(f->esp+4)); break;
-    case SYS_OPEN: for_valid(f->esp+4, 1); f->eax = open((const char *)*(uint32_t *)(f->esp+4)); break;
-    case SYS_FILESIZE: for_valid(f->esp+4, 1); f->eax = filesize((int)*(uint32_t *)(f->esp+4)); break;
-    case SYS_READ: for_valid(f->esp+4, 3); f->eax = read((int)*(uint32_t *)(f->esp+4),(void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
-    case SYS_WRITE: for_valid(f->esp+4, 3); f->eax = write((int)*(uint32_t *)(f->esp+4),(const void *)*(uint32_t *)(f->esp+8),(unsigned)*(uint32_t *)(f->esp+12)); break;
-    case SYS_SEEK: for_valid(f->esp+4, 2); seek((int)*(uint32_t *)(f->esp+4), (unsigned)*(uint32_t *)(f->esp+8)); break;
-    case SYS_TELL: for_valid(f->esp+4, 1); f->eax = tell((int)*(uint32_t *)(f->esp+4)); break;
-    case SYS_CLOSE: for_valid(f->esp+4, 1); close((int)*(uint32_t *)(f->esp+4)); break;
-    default: exit(-1); break;
+syscall_handler (struct intr_frame *f) 
+{ 
+  int syscall_num = validate_read(f->esp, 4) ? *(int*)(f->esp) : -1;
+  
+  if(syscall_num < 0 || syscall_num >= 20) {
+    kill_process();
   }
+  
+  (syscall_table[syscall_num])(f);
 }
 
-
-//mod 2-1
-void halt(void){
+// void halt(void)
+void sys_halt (struct intr_frame * f UNUSED) {
   shutdown_power_off();
 }
-void exit(int status){
-  struct thread *t = thread_current();
-  t->exit_code = status;
-  t->exit_called = true;
-  printf("%s: exit(%d)\n", t->name, status);
-  for (int i = 2; i < 128; ++i){
-    if (thread_current()->fd_tab[i] != NULL)
-      close(i);
-  }
-  thread_exit();
+
+// void exit(int status)
+void sys_exit (struct intr_frame * f) {
+  int status;
+  
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  
+  status = *(int*)(f->esp + 4);
+
+  send_signal(status, SIG_WAIT);
+  printf ("%s: exit(%d)\n", thread_current()->name, status);
+  thread_exit();  
 }
-pid_t exec(const char *cmd_line){
-  pid_t pid = process_execute(cmd_line);
 
-  struct thread *t = thread_current();
-  struct list_elem *e = NULL;
+// pid_t exec(const char *cmd_line)
+void sys_exec (struct intr_frame * f) {
+  char *cmd_line;
+  pid_t pid;
+  char *itr;
+  
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  
+  cmd_line = *(char**)(f->esp + 4);
+  itr = cmd_line;
+  
+  if(!validate_read((void*)cmd_line, 1)) kill_process();
+  
+  while(*itr != '\0') {
+    itr++;
+    if(!validate_read((void*)itr, 1)) kill_process();
+  }
+  
+  pid = process_execute(cmd_line);
+  f->eax = pid == -1 ? pid : get_signal(pid, SIG_EXEC);
+}
 
-  struct list *children_list = &(t->children);  
-  struct thread *child = NULL;
-  for (e = list_begin (children_list); e != list_end (children_list);
+// int wait (pid_t pid)
+void sys_wait (struct intr_frame * f) {
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  
+  pid_t pid = *(pid_t*)(f->esp + 4);
+  
+  f->eax = process_wait(pid);
+}
+
+//bool create (const char *file, unsigned initial_size)
+void sys_create (struct intr_frame * f) {
+  char *name;
+  unsigned initial_size;
+  char *itr;
+  
+  if(!validate_read(f->esp + 4, 8)) kill_process();
+  
+  name = *(char **)(f->esp + 4);
+  initial_size = *(unsigned*)(f->esp + 8);
+  itr = name;
+  
+  if(!validate_read((void*)name, 1)) kill_process();
+
+  while(*itr != '\0') {
+    itr++;
+    if(!validate_read((void*)itr, 1)) kill_process();
+  }
+
+  lock_acquire(&file_lock);  
+  f->eax = filesys_create(name, initial_size);
+  lock_release(&file_lock);
+}
+
+//bool remove (const char *file)
+void sys_remove (struct intr_frame * f) {
+  char *name;
+  char *itr;
+  
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  
+  name = *(char **)(f->esp + 4);
+  itr = name;
+  
+  if(!validate_read((void*)name, 1)) kill_process();
+
+  while(*itr != '\0') {
+    itr++;
+    if(!validate_read((void*)itr, 1)) kill_process();
+  }
+  
+  lock_acquire(&file_lock);
+  f->eax = filesys_remove(name);
+  lock_release(&file_lock);
+}
+
+//int open (const char *file)
+void sys_open (struct intr_frame * f) {
+  char *name;
+  char *itr;
+  struct thread *t;
+  struct file *file;
+  struct list_elem *e;
+  struct fd_elem *f_elem;
+  struct fd_elem *fd_elem;
+  
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+
+  name = *(char **)(f->esp + 4);
+  itr = name;
+
+  if(!validate_read((void*)name, 1)) kill_process();
+
+  while(*itr != '\0') {
+    itr++;
+    if(!validate_read((void*)itr, 1)) kill_process();
+  }
+  
+  if(itr == name) {
+    f->eax = -1;
+    return;
+  }
+  
+  t = thread_current();
+  file = filesys_open(name); //if fails, it returns NULL
+  f_elem = malloc(sizeof(struct fd_elem));
+  
+  if(file == NULL) {
+    f->eax = -1;
+    return;
+  }
+
+  f_elem->fd = 2;
+  f_elem->file_ptr = file;
+
+  for (e = list_begin (&t->fd_table); e != list_end (&t->fd_table);
        e = list_next (e))
-    {
-      child = list_entry (e, struct thread, childelem);
-      //printf("%d while given %d\n", child->tid, child_tid);
-      if (child->tid == pid){
-        break;
-      }
+  {
+    fd_elem = list_entry (e, struct fd_elem, elem);
+    if(fd_elem->fd > f_elem->fd) {
+      e = list_prev(e);
+      list_insert(e, &f_elem->elem);
+      f->eax = f_elem->fd;
+      return;
     }
-
-  sema_down(&(child->load));
-  
-  if (pid == -1 || !child->loaded) //error
-    return -1;
-  
-  return pid;
-}
-int wait(pid_t pid){
-  return process_wait(pid);
-}
-
-//mod 2-2
-bool create(const char* file, unsigned initial_size) {
-  validity(file);
-  return filesys_create(file, initial_size);
-}
-
-bool remove(const char* file) {
-  validity(file);
-  return filesys_remove(file);
-}
-
-int open(const char* file) {
-  //printf("o1\n");
-  validity(file); 
-  //printf("o2\n");
-  lock_acquire(&race_lock);
-  struct file *file_ = filesys_open(file);
-  //printf("o3\n");
-  if (file_ == NULL){
-    lock_release(&race_lock);
-    return -1;
+    f_elem->fd++;
   }
-  //printf("o4\n");
-  struct thread *cur = thread_current();
-  /* What are these codes for?
-  printf("o5\n");
-  while ((cur->fd_idx<BOUND) && fdt[cur->fd_idx])
-    cur->fd_idx++;
-  printf("o6\n");
+  list_push_back(&t->fd_table, &f_elem->elem);
+  f->eax = f_elem->fd;
+}
+
+//int filesize (int fd)
+void sys_filesize (struct intr_frame * f) {
   int fd;
-  if (cur->fd_idx>BOUND)
-    fd = -1;
-  else{
-    fdt[cur->fd_idx]=file;
-    fd=cur->fd_idx;
-  }
-  printf("fd = %d\n", fd);
-  if(fd==-1)
-    file_close(file_);
-  printf("o7\n");
-  */
-  //printf("o5\n");
-  int fd = cur->fd_idx;
-  cur->fd_tab[fd] = file_;
-  ++(cur->fd_idx);
-  lock_release(&race_lock);
-  //printf("o6\n");
-  return fd;
+  struct file *file;
+  
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  
+  fd = *(int*)(f->esp + 4);
+  file = get_file_from_fd(fd);
+  
+  if(file == NULL) f->eax = -1;
+  
+  f->eax = file_length(file);
 }
 
-int filesize(int fd) {
-  //printf("fs1\n");
-  struct thread* cur = thread_current();
-  struct file* selected;
-  /*
-  if (fd < 0 || fd >= BOUND){
-    selected = NULL;
-  }
-  else{
-    selected = cur->fd_tab[fd];
-  }
-  */
-  selected = cur->fd_tab[fd];
-  //printf("fs2 with fd : %d\n", fd);
-  if (selected == NULL)
-  {
-    //printf("fs3-1\n");
-    exit(-1);
-  }
-  //printf("fs3-2\n");
-  int ret = file_length(selected);
-  //printf("fs4\n");
-  return ret;
-}
-
-int read(int fd, void* buffer, unsigned size) {
-  //printf("r1\n");
-  validity(buffer);
-  int num;
-  struct thread *cur = thread_current();
-  struct file *file_;
-  lock_acquire(&race_lock);
-  //printf("r2. fd is %d\n", fd);
-  if (fd == 0){
-    for (int i = 0; i < size; ++i){
-      ((char *) buffer)[i] = input_getc();
-      if (((char *) buffer)[i] == '\0')
-        break;
+//int read (int fd, void *buffer, unsigned size)
+void sys_read (struct intr_frame * f) {
+  char c;
+  unsigned count = 0;
+  int fd;
+  uint8_t* buffer;
+  unsigned size;
+  struct file *file;
+  
+  if(!validate_read(f->esp + 4, 12)) kill_process();
+  
+  fd = *(int*)(f->esp + 4);
+  buffer = *(uint8_t**)(f->esp + 8);
+  size = *(unsigned*)(f->esp + 12);
+  file = get_file_from_fd(fd); 
+  
+  if(!validate_write(buffer, size)) kill_process();
+  
+  if(fd == 0) {
+    c = input_getc();
+    while(c != '\n' && c != -1 && count < size) {
+      if(!put_user(buffer, c)) kill_process();
+      buffer++;
+      count++;
+      c = input_getc();
     }
-    lock_release(&race_lock);
-    num = size;
-    //printf("r3-1\n");
+    f->eax = count;
   }
-  else{
-    if ( fd < 0 || fd >= BOUND){
-      lock_release(&race_lock);
-      //printf("r3-2\n");
-      exit(-1);
-    }
-    else{
-      //printf("r3-3-1 with fd : %d\n", fd);
-      file_ = cur->fd_tab[fd];
-      //printf("r3-3-2\n");
-      if (file_ == NULL){
-        lock_release(&race_lock);
-        //printf("r3-3-3\n");
-        exit(-1);
-      }
-      //printf("r3-3-4\n");
-      num = file_read(file_, buffer, size);
-      lock_release(&race_lock);
-      //printf("r3-3-5\n");
-    }
-  }
-  return num;
-}
-
-int write(int fd, const void* buffer, unsigned size) {
-  int num;
-  struct thread *cur = thread_current();
-  //printf("w1\n");
-  validity(buffer);
-  //printf("w2\n");
-  //printf("fd = %d\n", fd);
-  if (fd == 1){
-    lock_acquire(&race_lock);
-    //printf("w3-1\n");
-    putbuf(buffer, size);
-    num = size;
-  }
-  else{
-    if (fd < 0 || fd >= BOUND) {
-      //printf("w3-2\n");
-      exit(-1);
-    }
-    else {
-      struct file *file_ = cur->fd_tab[fd];
-      //printf("w3-2\n");
-      if (file_ == NULL) exit(-1);
-      //printf("w3-4\n");
-      lock_acquire(&race_lock);
-      num = file_write(file_, buffer, size);
-    }
-  }
-  //printf("w4\n");
-  lock_release(&race_lock);
-  //printf("w5\n");
-  return num;
-}
-
-void seek(int fd, unsigned position) {
-  struct thread *cur=thread_current();
-  struct file *file_ = cur->fd_tab[fd];
-  if (file_)
-    file_seek(file_, position);
-}
-
-unsigned tell(int fd) {
-  struct thread *cur = thread_current();
-  struct file *file_;
-  if ( fd <= 1 || fd > BOUND)
-    file_ = NULL;
-  else{
-    file_ = cur->fd_tab[fd];
-  }
-  if(file_)
-    return file_tell(file_);
-  return -1;
-}
-
-void close(int fd) {
-  struct thread* cur = thread_current();
-  struct file* file_;
-  if (fd <= 1 || fd >= BOUND)
-  {
-    file_ = NULL;
-  }
-  else{
-    file_ = cur->fd_tab[fd];
-  }
-  if (file_) {
-    file_close(file_);
-    cur->fd_tab[fd] = NULL;
+  else if(fd == 1) {
+    f->eax = -1;
   }
   else {
-    exit(-1);
+    if(file == NULL) {
+      f->eax = -1;
+      return;
+    }
+    lock_acquire(&file_lock);
+    f->eax = file_read(file, buffer, size);
+    lock_release(&file_lock);
   }
 }
 
+//int write (int fd, const void *buffer, unsigned size)
+void sys_write (struct intr_frame * f) {
+  int fd;
+  char* buffer;
+  unsigned size;
+  struct file *file;
+  
+  if(!validate_read(f->esp + 4, 12)) kill_process();
+  
+  fd = *(int*)(f->esp + 4);
+  buffer = *(char**)(f->esp + 8);
+  size = *(unsigned*)(f->esp + 12);
+  file = get_file_from_fd(fd);
+  
+  if(!validate_read(buffer, size)) kill_process();
+  
+  if(fd == 0) {
+    f->eax = 0; 
+  }
+  else if(fd == 1) {
+    putbuf(buffer, size);
+    f->eax = size;
+  }
+  else {
+    if(file == NULL) {
+      f->eax = 0;
+      return;
+    }
+    lock_acquire(&file_lock);
+    f->eax = file_write (file, buffer, size);
+    lock_release(&file_lock);
+  }
+}
 
-void validity(const uint32_t *addr){
-  struct thread* cur = thread_current();
-  if (addr == NULL || !(is_user_vaddr(addr)) || addr < BOTTOM || pagedir_get_page(cur->pagedir, addr) == NULL)
+//void seek (int fd, unsigned position)
+void sys_seek (struct intr_frame * f) {
+  int fd;
+  off_t position;
+  struct file *file;
+  
+  if(!validate_read(f->esp + 4, 8)) kill_process();
+  
+  fd = *(int*)(f->esp + 4);
+  position = *(int*)(f->esp + 8);
+  file = get_file_from_fd(fd);  
+  
+  if(file == NULL) f->eax = -1;
+  
+  lock_acquire(&file_lock);
+  file_seek(file, position);
+  lock_release(&file_lock);
+}
+
+//unsigned tell (int fd)
+void sys_tell (struct intr_frame * f) {
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  int fd = *(int*)(f->esp + 4);
+  struct file *file = get_file_from_fd(fd);
+  if(file == NULL)
+    f->eax = -1;
+  lock_acquire(&file_lock);
+  f->eax = file_tell(file);
+  lock_release(&file_lock);
+}
+
+//void close (int fd)
+void sys_close (struct intr_frame * f) {
+  int fd;
+  struct file *file;
+  struct thread *t;
+  struct list_elem *e;
+  struct fd_elem *fd_elem;
+  
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  
+  fd = *(int*)(f->esp + 4);
+  file = get_file_from_fd(fd);
+  t = thread_current();
+    
+  lock_acquire(&file_lock);
+  file_close(file);
+  lock_release(&file_lock);
+  
+  for (e = list_begin (&t->fd_table); e != list_end (&t->fd_table);
+       e = list_next (e))
   {
-    exit(-1);
-  }
-}
-
-void for_valid(const uint32_t *addr, int num){
-  for (int i = 0; i < num; ++i){
-    validity(addr + 4*i);
-    validity(addr + 4*i + 1);
-    validity(addr + 4*i + 2);
-    validity(addr + 4*i + 3);
+    fd_elem = list_entry (e, struct fd_elem, elem);
+    if(fd_elem->fd == fd) {
+      list_remove(e);
+      free(fd_elem);
+      return;
+    }
   }
 }

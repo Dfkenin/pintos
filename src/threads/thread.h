@@ -4,8 +4,6 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
-//mod 2-1
-#include "synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -25,8 +23,6 @@ typedef int tid_t;
 #define PRI_MIN 0                       /* Lowest priority. */
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
-//mod 2-2
-#define BOUND 3*(1<<9)
 
 /* A kernel thread or user process.
 
@@ -101,23 +97,14 @@ struct thread
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
 
-    //mod 2-1
-    int exit_code;
+    struct list_elem p_elem;            /* List element for process child-parent relationship */
     struct thread *parent;
-    struct list children;
-    struct list_elem childelem;
-    struct semaphore wait;
-    bool exit_called;
-    //mod 2-2
-    struct file** fd_tab;
-    int fd_idx;
-    bool loaded;
-    struct semaphore load;
-    struct semaphore exit;
-    //mod 3
-    struct file *run_file;
+    struct list child_list;
 
+    struct list signal_list;
+    struct list fd_table;
 
+    struct file *current_file;
 #endif
 
     /* Owned by thread.c. */
@@ -159,5 +146,7 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+struct thread* get_thread_from_tid(tid_t tid);
 
 #endif /* threads/thread.h */
