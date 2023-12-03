@@ -119,6 +119,8 @@ start_process (void *file_name_)
   *(int*)(*esp) = argc;
   *esp -= sizeof(void*);
   *(void**)(*esp) = NULL; // fake ret
+
+  printf("stack agruments\n");
   
   send_signal(thread_current()->tid, SIG_EXEC);
   
@@ -509,6 +511,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       
       */
       //mod 2
+      printf("load segment\n");
       allocate_s_page(&thread_current()->s_pt, upage, file, ofs, read_bytes, zero_bytes, writable, 0);
 
       /* Advance. */

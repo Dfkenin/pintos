@@ -153,8 +153,6 @@ void sys_exec (struct intr_frame * f) {
   pid_t pid;
   char *itr;
   
-  printf("\nI'm in sys_exec!\n\n");
-
   if(!validate_read(f->esp + 4, 4)) kill_process();
   
   cmd_line = *(char**)(f->esp + 4);
@@ -167,8 +165,6 @@ void sys_exec (struct intr_frame * f) {
     if(!validate_read((void*)itr, 1)) kill_process();
   }
   
-  printf("\nI'm moving to process_execute!\n\n");
-
   pid = process_execute(cmd_line);
   f->eax = pid == -1 ? pid : get_signal(pid, SIG_EXEC);
 }
