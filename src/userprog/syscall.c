@@ -16,6 +16,9 @@ static bool put_user(uint8_t *udst, uint8_t byte);
 struct file* get_file_from_fd(int fd);
 bool validate_read(void *p, int size);
 bool validate_write(void *p, int size);
+mid_t mmap(int fd, void *addr);
+void munmap(mide_t mapping);
+void exit(int status);
 
 static void (*syscall_table[20])(struct intr_frame*) = {
   sys_halt,
@@ -133,7 +136,10 @@ void sys_exit (struct intr_frame * f) {
   if(!validate_read(f->esp + 4, 4)) kill_process();
   
   status = *(int*)(f->esp + 4);
+  exit(status);
+}
 
+void exit(int status){
   send_signal(status, SIG_WAIT);
   printf ("%s: exit(%d)\n", thread_current()->name, status);
   thread_exit();  
@@ -426,32 +432,34 @@ void sys_close (struct intr_frame * f) {
 //mod 5
 void sys_mmap(struct intr_frame * f){
   int fd;
+  void *addr;
+  if(!validate_read(f->esp + 4, 8)) kill_process();
+  
+  fd = *(int*)(f->esp + 4);
+  addr = *(void**)(f->esp + 8);
+  f->eax = mmap(fd, addr);
+}
+
+mid_t mmap(int fd, void *addr){
   struct file *file;
   struct file *open;
-  void *addr;
   struct thread *t;
   int size;
   off_t ofs;
   struct memmap *memmap;
   uint32_t read_bytes;
-
-  if(!validate_read(f->esp + 4, 8)) kill_process();
   
-  fd = *(int*)(f->esp + 4);
-  addr = *(void**)(f->esp + 8);
   file = get_file_from_fd(fd);  
 
   t = thread_current();
   size = file_length(file);
 
   if (!file || !addr || (int)addr%PGSIZE!=0){
-    f->eax = -1;
-    return;
+    return -1;
   }
   for (ofs = 0; ofs < size; ofs += PGSIZE){
     if (get_s_page(&t->s_pt, addr + ofs)){
-      f->eax = -1;
-      return;
+      return -1;
     }
   }
 
@@ -459,8 +467,7 @@ void sys_mmap(struct intr_frame * f){
   open = file_reopen(file);
   if (!open){
     lock_release(&file_lock);
-    f->eax = -1;
-    return;
+    return -1;
   }
 
   memmap = (struct memmap*)malloc(sizeof(struct memmap));
@@ -477,21 +484,26 @@ void sys_mmap(struct intr_frame * f){
   }
 
   lock_release(&file_lock);
-  f->eax = memmap->mid;
+  return memmap->mid;
 }
 
 void sys_munmap(struct intr_frame * f){
   mid_t mapping;
+  
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  
+  mapping = *(mid_t*)(f->esp + 4);
+
+  munmap(mapping);
+}
+
+void munmap(mide_t mapping){
   void *addr;
   struct thread *t;
   int size;
   off_t ofs;
   struct memmap *memmap;
   struct list_elem *e;
-  
-  if(!validate_read(f->esp + 4, 4)) kill_process();
-  
-  mapping = *(mid_t*)(f->esp + 4);
 
   t = thread_current();
   for (e = list_begin(&t->memmap_table); e != list_end(&t->memmap_table); e = list_next(e)){

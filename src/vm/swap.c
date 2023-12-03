@@ -35,7 +35,7 @@ size_t swap_out(void *kpage){
 void swap_in(size_t index, void *kpage){
     lock_acquire(&swap_lock);
     if (bitmap_test(swap_table, index) == 0){
-        sys_exit(-1);
+        exit(-1);
     }
 
     bitmap_set(swap_table, index, 0);

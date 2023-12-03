@@ -181,7 +181,7 @@ process_exit (void)
 
   //mod 7
   for (int i = 1; i < cur->next_mid; ++i){
-    sys_munmap(i);
+    munmap(i);
   }
   s_pt_delete(&cur->s_pt);
   

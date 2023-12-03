@@ -52,7 +52,7 @@ void *free_frame(void *kpage){
     }
     if (e == list_end(&ft)){
         e = NULL;
-        sys_exit(-1);
+        exit(-1);
     }
 
     palloc_free_page(e->kpage);

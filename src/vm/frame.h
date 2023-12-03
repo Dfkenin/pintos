@@ -19,10 +19,9 @@ struct fte {
     struct list_elem lru; //for LRU
 };
 
-void ft_init();
-static int allocate_fid (void);
+void ft_init(void);
 void *allocate_frame(enum palloc_flags flags, void *upage);
 void *free_frame(void *kpage);
-void evict_frame();
+void evict_frame(void);
 
 #endif /* vm/frame.h */

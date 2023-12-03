@@ -2,6 +2,8 @@
 #include "userprog/syscall.h"
 #include "userprog/pagedir.h"
 #include "vm/swap.h"
+#include "threads/interrupt.h"
+
 
 void s_pt_init(struct hash *s_pt);
 unsigned hash_func(const struct hash_elem *e, void *aux UNUSED);
