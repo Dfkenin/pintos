@@ -7,6 +7,7 @@
 #include <list.h>
 #include "threads/malloc.h"
 #include "vm/swap.h"
+#include "threads/vaddr.h"
 
 
 

@@ -180,6 +180,12 @@ process_exit (void)
     file_close(f_e->file_ptr);
     free(f_e);
   }
+
+  //mod 7
+  for (int i = 1; i < cur->next_mid; ++i){
+    sys_munmap(i);
+  }
+  s_pt_delete(&cur->s_pt);
   
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */

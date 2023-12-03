@@ -18,6 +18,7 @@ struct fd_elem {
   struct list_elem elem;
 };
 
+
 void kill_process(void);
 
 struct lock file_lock;

@@ -1,6 +1,7 @@
 #include "vm/page.h"
 #include "userprog/syscall.h"
 #include "userprog/pagedir.h"
+#include "vm/swap.h"
 
 void s_pt_init(struct hash *s_pt){
     hash_init(s_pt, hash_func, less_func, NULL);
@@ -29,6 +30,8 @@ void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t of
     p->read_bytes = read_bytes;
     p->zero_bytes = zero_bytes;
     p->writable = writable;
+
+    p->swap_index = -1;
 
     hash_insert(s_pt, &p->hash_elem);
 }
@@ -62,15 +65,21 @@ bool lazy_load(struct hash *s_pt, void *upage, struct intr_frame *f){
     if (kpage == NULL)
     return false;
 
-    if (sp->file){
-        if (file_read (sp->file, kpage, sp->read_bytes) != (int) sp->read_bytes)
-        {
-            free_frame (kpage);
-            return false;
+    if (sp->swap_index == -1){
+        if (sp->file){
+            if (file_read (sp->file, kpage, sp->read_bytes) != (int) sp->read_bytes)
+            {
+                free_frame (kpage);
+                return false;
+            }
         }
+        memset (kpage + sp->read_bytes, 0, sp->zero_bytes);
     }
+    else{
+        swap_in(e->swap_id, kpage);
+    }
+
     
-    memset (kpage + sp->read_bytes, 0, sp->zero_bytes);
 
     struct thread *t = thread_current ();
     if (!(pagedir_get_page (t->pagedir, upage) == NULL
@@ -88,4 +97,13 @@ bool lazy_load(struct hash *s_pt, void *upage, struct intr_frame *f){
 void free_s_page(struct hash *s_pt, struct s_page *sp){
     hash_delete(s_pt, &sp->hash_elem);
     free(sp);
+}
+
+void destructor(struct hash_elem *e, void *aux){
+    struct s_page *sp;
+    sp = hash_entry(e, struct s_page, hash_elem);
+    free(sp);
+}
+void s_pt_delete(struct hash *s_pt){
+    hash_destroy(s_pt, destructor);
 }

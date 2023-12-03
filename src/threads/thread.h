@@ -19,6 +19,8 @@ enum thread_status
 /* Thread identifier type.
    You can redefine this to whatever type you like. */
 typedef int tid_t;
+//mod 5
+typedef int mid_t;
 #define TID_ERROR ((tid_t) -1)          /* Error value for tid_t. */
 
 /* Thread priorities. */
@@ -111,10 +113,22 @@ struct thread
 
     //mod 3
     struct hash s_pt;
+    //mod 5
+    struct list memmap_table;
+    mid_t next_mid;
+
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
+
+//mod 5
+struct memmap{
+   mid_t mid;
+   struct file *file;
+   struct list_elem elem;
+   void *addr;
+}
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
@@ -153,5 +167,7 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 struct thread* get_thread_from_tid(tid_t tid);
+//mod 5
+static mid_t allocate_mid (struct thread *t);
 
 #endif /* threads/thread.h */

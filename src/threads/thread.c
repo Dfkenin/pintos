@@ -37,6 +37,8 @@ static struct thread *initial_thread;
 
 /* Lock used by allocate_tid(). */
 static struct lock tid_lock;
+//mod 5
+static struct lock mid_lock;
 
 /* Stack frame for kernel_thread(). */
 struct kernel_thread_frame 
@@ -71,6 +73,8 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+//mod 5
+static mid_t allocate_mid (void);
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -93,6 +97,8 @@ thread_init (void)
   signal_init();
 
   lock_init (&tid_lock);
+  //mod 5
+  lock_init (&mid_lock);
   list_init (&ready_list);
   list_init (&all_list);
 
@@ -189,6 +195,9 @@ thread_create (const char *name, int priority,
 
   //mod 3
   s_pt_init(&t->s_pt);
+  //mod 5
+  list_init(&t->memmap_table);
+  t->next_mid = 1;
   
   /* Set parent-child relationship */
   t->parent = cur;
@@ -614,4 +623,18 @@ get_thread_from_tid(tid_t tid) {
       if(t->tid == tid) return t;
     }
   return NULL;
+}
+
+
+//mod 5
+static mid_t
+allocate_mid (struct thread *t) 
+{
+  mid_t mid;
+
+  lock_acquire (&mid_lock);
+  mid = t->next_mid++;
+  lock_release (&mid_lock);
+
+  return mid;
 }

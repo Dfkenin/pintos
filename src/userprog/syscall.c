@@ -30,7 +30,9 @@ static void (*syscall_table[20])(struct intr_frame*) = {
   sys_write,
   sys_seek,
   sys_tell,
-  sys_close
+  sys_close,
+  sys_mmap,
+  sys_munmap
 }; // syscall jmp table
 
 /* Reads a byte at user virtual address UADDR.
@@ -419,4 +421,101 @@ void sys_close (struct intr_frame * f) {
       return;
     }
   }
+}
+
+//mod 5
+mid_t sys_mmap(struct intr_frame * f){
+  int fd;
+  struct file *file;
+  struct file *open;
+  void *addr;
+  struct thread *t;
+  int size;
+  off_t ofs;
+  struct memmap *memmap;
+  uint32_t read_bytes;
+
+  if(!validate_read(f->esp + 4, 8)) kill_process();
+  
+  fd = *(int*)(f->esp + 4);
+  addr = *(void*)(f->esp + 8);
+  file = get_file_from_fd(fd);  
+
+  t = thread_current();
+  size = sys_filesize(fd);
+
+  if (!file || !addr || (int)addr%PGSIZE!=0){
+    return -1;
+  }
+  for (ofs = 0; ofs < size; ofs += PGSIZE){
+    if get_s_page(&t->s_pt, addr + ofs){
+      return -1;
+    }
+  }
+
+  lock_acquire(&file_lock);
+  open = file_reopen(file);
+  if (!open){
+    lock_release(&file_lock);
+    return -1;
+  }
+
+  memmap = (struct memmap*)malloc(sizeof(struct memmpap));
+  memmap->mid = allocate_mid(t);
+  memmap->file = file;
+  memmap->addr = addr; // for munmap
+  list_push_back(&t->memmap_table, &memmap->elem);
+
+  for (ofs = 0; ofs < size; ){
+    read_bytes = ofs + PGSIZE < size ? PGSIZE : size - ofs;
+    allocate_s_page(&t->s_pt, addr, file, ofs, read_bytes, PGSIZE - read_bytes, true);
+    
+    ofs += PGSIZE; addr += PGSIZE;
+  }
+
+  lock_release(&file_lock);
+  return memmap->mid;
+}
+
+void sys_munmap(struct intr_frame * f){
+  mid_t mapping;
+  void *addr;
+  struct thread *t;
+  int size;
+  off_t ofs;
+  struct memmap *memmap;
+  struct list_elem *e;
+  struct s_page *cur_page;
+  
+  if(!validate_read(f->esp + 4, 4)) kill_process();
+  
+  mapping = *(mid_t*)(f->esp + 4);
+
+  t = thread_current();
+  for (e = list_begin(&t->memmap_table); e != list_end(&t->memmap_table); e = list_next(e)){
+    memmap = list_entry(e, struct memmap, elem);
+    if (memmap->mid == mapping){
+      break;
+    }
+  }
+  if (e == list_end(&t->memmap_table)){
+    return;
+  }
+  
+  lock_acquire(&file_lock);
+  size = file_length(memmap->file);
+  addr = memmap->addr;
+
+  for (ofs = 0; ofs < size; ){
+    cur_page = get_s_page(&t->s_pt, addr);
+    if (pagedir_is_dirty(t->pagedir, addr)){
+      file_write_at(cur_page->file, addr, cur_page->read_bytes, cur_page->ofs);
+    }
+    page_delete(&t->s_pt, cur_page);
+
+    ofs += PGSIZE; addr += PGSIZE;
+  }
+  lock_release(&file_lock);
+
+  list_remove(e);
 }

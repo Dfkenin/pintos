@@ -5,6 +5,7 @@
 
 static struct list ft;
 static struct lock fid_lock;
+static struct list_elem *lru_pointer;
 
 void ft_init();
 static int allocate_fid (void);
@@ -23,7 +24,7 @@ void *allocate_frame(enum palloc_flags flags, void *upage){
     
     kpage = palloc_get_page(flags);
     if (kpage == NULL){
-        evict_page();
+        evict_frame();
         kpage = palloc_get_page(flags);
         if (kpage == NULL){
             return NULL;
@@ -60,8 +61,36 @@ void *free_frame(void *kpage){
     free(e);
 }
 
-void evict_page(){
+void evict_frame(){
+    struct list_elem *e;
+    struct s_page *sp;
 
+    e = lru_pointer;
+    sp = list_entry(e, struct s_page, lru);
+    if (pagedir_is_accessed(sp->t->pagedir, sp->upage)){
+        pagedir_set_accessed(sp->t->pagedir, sp->upage, false);
+
+        for (; e != lru_pointer; ){
+            sp = list_entry(e, struct s_page, lru);
+            if (pagedir_is_accessed(sp->t->pagedir, sp->upage)){
+                pagedir_set_accessed(sp->t->pagedir, sp->upage, false);
+            }
+            else{
+                break;
+            }
+
+            if (list_next(e) == list_end(&ft)){
+                e = list_begin(&ft);
+            }
+            else{
+                e = list_next(e);
+            }
+        }
+    }
+
+    sp->swap_index = swap_out(sp->kpage);
+
+    free_frame(sp->kpage);
 }
 
 static int

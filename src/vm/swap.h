@@ -1,9 +1,10 @@
 #ifndef VM_SWAP_H
 #define VM_SWAP_H
 
-#include "userprog/pagedir.h"
-#include "threads/palloc.h"
-#include "threads/thread.h"
+#include <bitmap.h>
+#include "vm/page.h"
+#include "devices/block.h"
+#include "threads/vaddr.h"
 
 
 
