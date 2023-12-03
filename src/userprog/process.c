@@ -83,6 +83,8 @@ start_process (void *file_name_)
     palloc_free_page (file_name);
     thread_exit ();
   }
+
+  printf("before %p\n", if_.esp);
   
   /* Copy command to stack */
   *(file_name + strlen(file_name)) = ' ';
@@ -119,6 +121,7 @@ start_process (void *file_name_)
   *(int*)(*esp) = argc;
   *esp -= sizeof(void*);
   *(void**)(*esp) = NULL; // fake ret
+  printf("before %p\n", if_.esp);
   
   send_signal(thread_current()->tid, SIG_EXEC);
   
@@ -532,6 +535,7 @@ setup_stack (void **esp)
   if (kpage != NULL) 
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
+      printf("setup_stack success? %d\n", success);
       if (success)
         *esp = PHYS_BASE;
       else
