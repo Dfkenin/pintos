@@ -168,5 +168,8 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 struct thread* get_thread_from_tid(tid_t tid);
+//mod 5
+mid_t allocate_mid (struct thread *t);
+
 
 #endif /* threads/thread.h */

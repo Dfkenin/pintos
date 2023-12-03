@@ -161,7 +161,8 @@ page_fault (struct intr_frame *f)
   }
 
   //mod 2
-  if (lazy_load(&thread_current()->s_pt, fault_addr, &f)){
+  bool growth = (fault_addr >= f->esp - 32);
+  if (lazy_load(&thread_current()->s_pt, fault_addr, growth)){
    return;
   }
   

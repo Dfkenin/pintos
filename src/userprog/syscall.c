@@ -525,7 +525,7 @@ void munmap(mid_t mapping){
     if (pagedir_is_dirty(t->pagedir, addr)){
       file_write_at(cur_page->file, addr, cur_page->read_bytes, cur_page->ofs);
     }
-    page_delete(&t->s_pt, cur_page);
+    s_page_delete(&t->s_pt, cur_page);
 
     ofs += PGSIZE; addr += PGSIZE;
   }

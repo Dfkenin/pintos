@@ -74,7 +74,7 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 //mod 5
-static mid_t allocate_mid (struct thread *t);
+mid_t allocate_mid (struct thread *t);
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -627,7 +627,7 @@ get_thread_from_tid(tid_t tid) {
 
 
 //mod 5
-static mid_t
+mid_t
 allocate_mid (struct thread *t) 
 {
   mid_t mid;

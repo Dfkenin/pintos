@@ -10,7 +10,7 @@ unsigned hash_func(const struct hash_elem *e, void *aux UNUSED);
 bool less_func(const struct hash_elem *a, const struct hash_elem *b, void *aux UNUSED);
 void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable);
 struct s_page *get_s_page(struct hash *s_pt, void *upage);
-bool lazy_load(struct hash *s_pt, void *upage, struct intr_frame *f);
+bool lazy_load(struct hash *s_pt, void *upage, bool growth);
 void free_s_page(struct hash *s_pt, struct s_page *sp);
 void s_page_delete(struct hash *s_pt, struct s_page *sp);
 void destructor(struct hash_elem *e, void *aux);
@@ -56,12 +56,12 @@ struct s_page *get_s_page(struct hash *s_pt, void *upage){
     return elem ? hash_entry(elem, struct s_page, hash_elem) : NULL;
 }
 
-bool lazy_load(struct hash *s_pt, void *upage, struct intr_frame *f){
+bool lazy_load(struct hash *s_pt, void *upage, bool growth){
     struct s_page *sp;
 
     sp = get_s_page(s_pt, upage);
     if (sp == NULL){ //case 나누면 stack growth도..?   
-        if (upage >= f->esp - 32){
+        if (growth){
             if (upage < PHYS_BASE - 2048*PGSIZE) {
                 return false;
             }
