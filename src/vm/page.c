@@ -62,7 +62,8 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
     struct s_page *sp;
 
     sp = get_s_page(s_pt, upage);
-    if (sp == NULL){ //case 나누면 stack growth도..?   
+    if (sp == NULL){ //case 나누면 stack growth도..?
+        printf("%d\n", growth);
         if (growth){
             if (upage < PHYS_BASE - 2048*PGSIZE) {
                 return false;
@@ -75,10 +76,13 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
         return false;
     }
 
+    printf("lazy_load pass 1");
     // from process.c load_segment func.
     uint8_t *kpage = allocate_frame (PAL_USER, upage);
     if (kpage == NULL)
     return false;
+
+    printf("lazy_load pass 2");
 
     if (sp->status == 0){
         if (sp->file){
@@ -97,17 +101,18 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
         return false;
     }
 
-    printf("I'm here !!!\n");
+    printf("lazy_load pass 3");
 
     struct thread *t = thread_current ();
     if (!(pagedir_get_page (t->pagedir, upage) == NULL
           && pagedir_set_page (t->pagedir, upage, kpage, sp->writable))) 
     {
-
+        printf("here condition %d\n", (pagedir_get_page(t->pagedir, upage) == NULL));
         free_frame (kpage);
         return false;
     }
 
+    printf("lazy_load pass 4");
 
     sp->kpage = kpage;
     sp->status = 2;
