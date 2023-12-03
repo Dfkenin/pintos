@@ -76,6 +76,7 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name_, &if_.eip, &if_.esp);
+  printf("load finished, success : %d\n", success);
   
   /* If load failed, quit. */
   if (!success) {
@@ -96,6 +97,8 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
   file_name = (char*)(*esp);
   save_ptr = file_name;
+
+  printf("command to stack\n");
    
   /* Argument Passing */
   for (token = strtok_r (NULL, " ", &save_ptr); token != NULL;
@@ -103,6 +106,9 @@ start_process (void *file_name_)
     while(*save_ptr == ' ') save_ptr++;
     argc++; // swap delimiter to null terminations
   }
+
+  
+  printf("agrument passing\n");
   
   *esp -= sizeof(char*);
   *(void**)(*esp) = NULL; // argv[argc]
