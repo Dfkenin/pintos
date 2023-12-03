@@ -4,6 +4,8 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+//mod 3
+#include <hash.h>
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -106,6 +108,9 @@ struct thread
 
     struct file *current_file;
 #endif
+
+    //mod 3
+    struct hash s_pt;
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */

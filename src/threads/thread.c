@@ -186,6 +186,9 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+
+  //mod 3
+  s_pt_init(&t->s_pt);
   
   /* Set parent-child relationship */
   t->parent = cur;
