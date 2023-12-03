@@ -47,7 +47,7 @@ void *free_frame(void *kpage){
     struct frame *f;
     struct list_elem *e;
     for (e = list_begin(&ft); e != list_end(&ft); e = list_next(e)){
-        f = list_entry(e, struct frame, list_elem);
+        f = list_entry(e, struct frame, lru);
         if (kpage == f->kpage){
             break;
         }
@@ -66,17 +66,17 @@ void *free_frame(void *kpage){
 
 void evict_frame(){
     struct list_elem *e;
-    struct s_page *sp;
+    struct frame *f;
 
     e = lru_pointer;
-    sp = list_entry(e, struct s_page, lru);
-    if (pagedir_is_accessed(sp->t->pagedir, sp->upage)){
-        pagedir_set_accessed(sp->t->pagedir, sp->upage, false);
+    f = list_entry(e, struct frame, lru);
+    if (pagedir_is_accessed(f->t->pagedir, f->upage)){
+        pagedir_set_accessed(f->t->pagedir, f->upage, false);
 
         for (; e != lru_pointer; ){
-            sp = list_entry(e, struct s_page, lru);
-            if (pagedir_is_accessed(sp->t->pagedir, sp->upage)){
-                pagedir_set_accessed(sp->t->pagedir, sp->upage, false);
+            f = list_entry(e, struct frame, lru);
+            if (pagedir_is_accessed(f->t->pagedir, f->upage)){
+                pagedir_set_accessed(f->t->pagedir, f->upage, false);
             }
             else{
                 break;
@@ -91,9 +91,9 @@ void evict_frame(){
         }
     }
 
-    sp->swap_index = swap_out(sp->kpage);
+    f->swap_index = swap_out(f->kpage);
 
-    free_frame(sp->kpage);
+    free_frame(f->kpage);
 }
 
 static int
