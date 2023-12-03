@@ -180,12 +180,14 @@ process_exit (void)
     file_close(f_e->file_ptr);
     free(f_e);
   }
-
+  printf("pexit 1\n");
   //mod 7
   for (int i = 1; i < cur->next_mid; ++i){
     munmap(i);
   }
+  printf("pexit 2\n");
   s_pt_delete(&cur->s_pt);
+  printf("pexit 3\n");
   
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
