@@ -8,6 +8,9 @@
 #include "userprog/process.h"
 #include "threads/malloc.h"
 #include "threads/vaddr.h"
+//mod 5
+#include "vm/page.h"
+#include "userprog/pagedir.h"
 
 static void syscall_handler (struct intr_frame *);
 
@@ -438,18 +441,18 @@ void sys_mmap(struct intr_frame * f){
   if(!validate_read(f->esp + 4, 8)) kill_process();
   
   fd = *(int*)(f->esp + 4);
-  addr = *(void*)(f->esp + 8);
+  addr = *(void**)(f->esp + 8);
   file = get_file_from_fd(fd);  
 
   t = thread_current();
-  size = sys_filesize(fd);
+  size = file_length(file);
 
   if (!file || !addr || (int)addr%PGSIZE!=0){
     f->eax = -1;
     return;
   }
   for (ofs = 0; ofs < size; ofs += PGSIZE){
-    if get_s_page(&t->s_pt, addr + ofs){
+    if (get_s_page(&t->s_pt, addr + ofs)){
       f->eax = -1;
       return;
     }
@@ -463,7 +466,7 @@ void sys_mmap(struct intr_frame * f){
     return;
   }
 
-  memmap = (struct memmap*)malloc(sizeof(struct memmpap));
+  memmap = (struct memmap*)malloc(sizeof(struct memmap));
   memmap->mid = allocate_mid(t);
   memmap->file = file;
   memmap->addr = addr; // for munmap
@@ -488,7 +491,6 @@ void sys_munmap(struct intr_frame * f){
   off_t ofs;
   struct memmap *memmap;
   struct list_elem *e;
-  struct s_page *cur_page;
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
   
@@ -510,7 +512,7 @@ void sys_munmap(struct intr_frame * f){
   addr = memmap->addr;
 
   for (ofs = 0; ofs < size; ){
-    cur_page = get_s_page(&t->s_pt, addr);
+    struct s_page *cur_page = get_s_page(&t->s_pt, addr);
     if (pagedir_is_dirty(t->pagedir, addr)){
       file_write_at(cur_page->file, addr, cur_page->read_bytes, cur_page->ofs);
     }

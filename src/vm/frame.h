@@ -17,7 +17,7 @@ struct fte {
     void *upage; //user virtual page
     struct thread *t; //in this thread
     struct list_elem lru; //for LRU
-}
+};
 
 void ft_init();
 static int allocate_fid (void);

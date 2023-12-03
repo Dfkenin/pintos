@@ -128,7 +128,7 @@ struct memmap{
    struct file *file;
    struct list_elem elem;
    void *addr;
-}
+};
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

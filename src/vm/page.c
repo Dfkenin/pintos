@@ -10,6 +10,7 @@ void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t of
 struct s_page *get_s_page(struct hash *s_pt, void *upage);
 bool lazy_load(struct hash *s_pt, void *upage, struct intr_frame *f);
 void free_s_page(struct hash *s_pt, struct s_page *sp);
+void s_page_delete(struct hash *s_pt, struct s_page *sp);
 void destructor(struct hash_elem *e, void *aux);
 void s_pt_delete(struct hash *s_pt);
 
@@ -106,6 +107,11 @@ bool lazy_load(struct hash *s_pt, void *upage, struct intr_frame *f){
 
 void free_s_page(struct hash *s_pt, struct s_page *sp){
     hash_delete(s_pt, &sp->hash_elem);
+    free(sp);
+}
+
+void s_page_delete(struct hash *s_pt, struct s_page *sp){
+    hash_delete(s_pt, sp->hash_elem);
     free(sp);
 }
 
