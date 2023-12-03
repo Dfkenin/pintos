@@ -3,9 +3,11 @@
 #include "threads/interrupt.h"
 
 
-void s_pt_init(struct hash *s_pt);
 unsigned hash_func(const struct hash_elem *e, void *aux UNUSED);
 bool less_func(const struct hash_elem *a, const struct hash_elem *b, void *aux UNUSED);
+
+/*
+void s_pt_init(struct hash *s_pt);
 void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable);
 struct s_page *get_s_page(struct hash *s_pt, void *upage);
 bool lazy_load(struct hash *s_pt, void *upage, bool growth);
@@ -13,6 +15,7 @@ void free_s_page(struct hash *s_pt, struct s_page *sp);
 void s_page_delete(struct hash *s_pt, struct s_page *sp);
 void destructor(struct hash_elem *e, void *aux);
 void s_pt_delete(struct hash *s_pt);
+*/
 
 void s_pt_init(struct hash *s_pt){
     hash_init(s_pt, hash_func, less_func, NULL);

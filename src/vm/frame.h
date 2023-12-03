@@ -8,7 +8,7 @@
 
 
 
-struct fte {
+struct frame {
     int fid; //frame number
     void *kpage; //kernel virtual page
     void *upage; //user virtual page

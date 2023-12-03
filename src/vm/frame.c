@@ -6,12 +6,14 @@ static struct list ft;
 static struct lock fid_lock;
 static struct list_elem *lru_pointer;
 
-void ft_init();
 static int allocate_fid (void);
+void evict_frame(void);
+
+/*
+void ft_init(void);
 void *allocate_frame(enum palloc_flags flags, void *upage);
 void *free_frame(void *kpage);
-void evict_frame();
-
+*/
 
 void ft_init(){
     list_init(&ft);
