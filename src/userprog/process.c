@@ -33,7 +33,7 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
-  printf("execute file\n");
+  //printf("execute file\n");
   char *fn_copy;
   char *save_ptr;
   tid_t tid;
@@ -123,7 +123,7 @@ start_process (void *file_name_)
   
   send_signal(thread_current()->tid, SIG_EXEC);
 
-  printf("go to intr_exit\n");
+  //printf("go to intr_exit\n");
   
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
