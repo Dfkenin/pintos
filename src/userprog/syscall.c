@@ -17,7 +17,7 @@ struct file* get_file_from_fd(int fd);
 bool validate_read(void *p, int size);
 bool validate_write(void *p, int size);
 mid_t mmap(int fd, void *addr);
-void munmap(mide_t mapping);
+void munmap(mid_t mapping);
 void exit(int status);
 
 static void (*syscall_table[20])(struct intr_frame*) = {
@@ -497,7 +497,7 @@ void sys_munmap(struct intr_frame * f){
   munmap(mapping);
 }
 
-void munmap(mide_t mapping){
+void munmap(mid_t mapping){
   void *addr;
   struct thread *t;
   int size;

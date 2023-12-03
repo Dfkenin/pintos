@@ -45,7 +45,7 @@ void sys_close (struct intr_frame * f);
 void sys_mmap (struct intr_frame * f);
 void sys_munmap (struct intr_frame * f);
 mid_t mmap(int fd, void *addr);
-void munmap(mide_t mapping);
+void munmap(mid_t mapping);
 void exit(int status);
 
 #endif /* userprog/syscall.h */
