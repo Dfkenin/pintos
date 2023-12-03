@@ -6,6 +6,7 @@
 #include <stdint.h>
 //mod 3
 #include <hash.h>
+#include "vm/page.h"
 
 /* States in a thread's life cycle. */
 enum thread_status

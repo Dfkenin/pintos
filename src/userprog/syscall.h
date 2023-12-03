@@ -11,6 +11,10 @@
 #include "filesys/fsutil.h"
 #include "filesys/inode.h"
 #include "filesys/off_t.h"
+//mod 5
+#include "vm/page.h"
+#include "userprog/pagedir.h"
+#include "threads/thread.h"
 
 struct fd_elem {
   int fd;

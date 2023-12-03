@@ -5,6 +5,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+//mod 1
+#include "vm/frame.h"
+//mod 6
+#include "vm/swap.h"
 
 /* Page directory with kernel mappings only. */
 extern uint32_t *init_page_dir;

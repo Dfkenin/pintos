@@ -37,10 +37,6 @@
 #include "filesys/filesys.h"
 #include "filesys/fsutil.h"
 #endif
-//mod 1
-#include "vm/frame.h"
-//mod 6
-#include "vm/swap.h"
 
 /* Page directory with kernel mappings only. */
 uint32_t *init_page_dir;

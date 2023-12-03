@@ -15,7 +15,7 @@ struct s_page{
     struct hash_elem hash_elem;
 
     struct file *file;
-    off_t file_ofs;
+    off_t ofs;
     uint32_t read_bytes;
     uint32_t zero_bytes;
     bool writable;
