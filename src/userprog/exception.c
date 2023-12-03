@@ -166,12 +166,12 @@ page_fault (struct intr_frame *f)
   //mod 2
   bool growth = (fault_addr >= f->esp - 32);
   //printf("fault_addr: %p, f->esp: %p\n", fault_addr, f->esp);
-  //printf("To lazy_load!\n");
+  printf("To lazy_load!\n");
   if (lazy_load(&thread_current()->s_pt, fault_addr, growth)){
    return;
   }
 
-  //printf("f->esp is %p\n", f->esp);
+  printf("f->esp is %p\n", f->esp);
   exit(-1);
   
   /* To implement virtual memory, delete the rest of the function
