@@ -58,22 +58,23 @@ struct s_page *get_s_page(struct hash *s_pt, void *upage){
     return elem ? hash_entry(elem, struct s_page, hash_elem) : NULL;
 }
 
-bool lazy_load(struct hash *s_pt, void *upage, bool growth){
+bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
     struct s_page *sp;
+    void *upage = pg_round_down(fault_addr);
 
     sp = get_s_page(s_pt, upage);
     if (sp == NULL){ //case 나누면 stack growth도..?
         printf("%d\n", growth);
         if (growth){
-            if (upage < PHYS_BASE - 2048*PGSIZE) {
+            if (fault_addr < PHYS_BASE - 2048*PGSIZE) {
                 return false;
             }
-            if (!get_s_page(s_pt, upage)){
-                allocate_s_page(s_pt, upage, NULL, 0, 0, 0, true, 0);
-                sp = get_s_page(s_pt, upage);
-            }
-        } 
-        return false;
+            allocate_s_page(s_pt, upage, NULL, 0, 0, 0, true, 0);
+            sp = get_s_page(s_pt, upage);
+        }
+        else{
+            return false;
+        }
     }
 
     printf("lazy_load pass 1\n");

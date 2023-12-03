@@ -163,12 +163,11 @@ page_fault (struct intr_frame *f)
     return;
   }
 
-  //mod 2, 4
-  bool growth = user ? (fault_addr >= f->esp - 32) : (fault_addr >= thread_current()->esp - 32);
-  if (user) printf("diff?? %d\n", (f->esp == thread_current()->esp));
+  //mod 2
+  bool growth = (fault_addr >= f->esp - 32);
 
   printf("To lazy_load!\n");
-  if (lazy_load(&thread_current()->s_pt, pg_round_down(fault_addr), growth)){
+  if (lazy_load(&thread_current()->s_pt, fault_addr, growth)){
    return;
   }
 
