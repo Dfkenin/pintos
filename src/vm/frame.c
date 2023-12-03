@@ -1,5 +1,6 @@
 #include "vm/frame.h"
 #include "userprog/syscall.h"
+#include "vm/page.h"
 
 
 static struct list ft;
@@ -66,6 +67,7 @@ void *free_frame(void *kpage){
 
 void evict_frame(){
     struct list_elem *e;
+    struct s_page *sp;
     struct frame *f;
 
     e = lru_pointer;
@@ -91,7 +93,8 @@ void evict_frame(){
         }
     }
 
-    f->swap_index = swap_out(f->kpage);
+    sp = get_s_page(&thread_current()->s_pt, f->upage);
+    sp->swap_index = swap_out(f->kpage);
 
     free_frame(f->kpage);
 }
