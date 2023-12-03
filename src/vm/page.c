@@ -83,7 +83,7 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
     if (kpage == NULL)
     return false;
 
-    printf("lazy_load pass 2\n");
+    printf("lazy_load pass 2 with status %d\n", sp->status);
 
     if (sp->status == 0){
         if (sp->file){
