@@ -76,13 +76,13 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
         return false;
     }
 
-    printf("lazy_load pass 1");
+    printf("lazy_load pass 1\n");
     // from process.c load_segment func.
     uint8_t *kpage = allocate_frame (PAL_USER, upage);
     if (kpage == NULL)
     return false;
 
-    printf("lazy_load pass 2");
+    printf("lazy_load pass 2\n");
 
     if (sp->status == 0){
         if (sp->file){
@@ -101,7 +101,7 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
         return false;
     }
 
-    printf("lazy_load pass 3");
+    printf("lazy_load pass 3\n");
 
     struct thread *t = thread_current ();
     if (!(pagedir_get_page (t->pagedir, upage) == NULL
@@ -112,7 +112,7 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
         return false;
     }
 
-    printf("lazy_load pass 4");
+    printf("lazy_load pass 4\n");
 
     sp->kpage = kpage;
     sp->status = 2;
