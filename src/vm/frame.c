@@ -11,6 +11,7 @@ void ft_init();
 static int allocate_fid (void);
 void *allocate_frame(enum palloc_flags flags, void *upage);
 void *free_frame(void *kpage);
+void evict_frame();
 
 
 void ft_init(){

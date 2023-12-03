@@ -424,7 +424,7 @@ void sys_close (struct intr_frame * f) {
 }
 
 //mod 5
-mid_t sys_mmap(struct intr_frame * f){
+void sys_mmap(struct intr_frame * f){
   int fd;
   struct file *file;
   struct file *open;
@@ -445,11 +445,13 @@ mid_t sys_mmap(struct intr_frame * f){
   size = sys_filesize(fd);
 
   if (!file || !addr || (int)addr%PGSIZE!=0){
-    return -1;
+    f->eax = -1;
+    return;
   }
   for (ofs = 0; ofs < size; ofs += PGSIZE){
     if get_s_page(&t->s_pt, addr + ofs){
-      return -1;
+      f->eax = -1;
+      return;
     }
   }
 
@@ -457,7 +459,8 @@ mid_t sys_mmap(struct intr_frame * f){
   open = file_reopen(file);
   if (!open){
     lock_release(&file_lock);
-    return -1;
+    f->eax = -1;
+    return;
   }
 
   memmap = (struct memmap*)malloc(sizeof(struct memmpap));
@@ -474,7 +477,7 @@ mid_t sys_mmap(struct intr_frame * f){
   }
 
   lock_release(&file_lock);
-  return memmap->mid;
+  f->eax = memmap->mid;
 }
 
 void sys_munmap(struct intr_frame * f){

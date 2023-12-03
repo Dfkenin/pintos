@@ -8,6 +8,10 @@ static struct lock swap_lock;
 
 static const int nsector = PGSIZE / BLOCK_SECTOR_SIZE;
 
+void swap_table_init();
+size_t swap_out(void *kpage);
+void swap_in(size_t index, void *kpage);
+
 void swap_table_init(){
     swap_block = block_get_role(BLOCK_SWAP);
     swap_table = bitmap_create(block_size(swap_block) / nsector); // 0: can swap, 1: can't swap
