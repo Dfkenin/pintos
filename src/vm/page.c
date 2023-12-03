@@ -23,7 +23,7 @@ void s_pt_init(struct hash *s_pt){
 
 unsigned hash_func(const struct hash_elem *e, void *aux UNUSED){
     const struct s_page *sp = hash_entry(e, struct s_page, hash_elem);
-    return hash_bytes(&sp->upage, sizeof(p->upage));
+    return hash_bytes(&sp->upage, sizeof(sp->upage));
 }
 
 bool less_func(const struct hash_elem *a, const struct hash_elem *b, void *aux UNUSED){
@@ -45,7 +45,7 @@ void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t of
     p->zero_bytes = zero_bytes;
     p->writable = writable;
 
-    p->swap_index = -1;
+    p->swap_index = NULL;
 
     hash_insert(s_pt, &p->hash_elem);
 }
@@ -79,7 +79,7 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
     if (kpage == NULL)
     return false;
 
-    if (sp->swap_index == -1){
+    if (sp->swap_index == NULL){
         if (sp->file){
             if (file_read (sp->file, kpage, sp->read_bytes) != (int) sp->read_bytes)
             {
@@ -90,7 +90,7 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
         memset (kpage + sp->read_bytes, 0, sp->zero_bytes);
     }
     else{
-        swap_in(e->swap_id, kpage);
+        swap_in(sp->swap_index, kpage);
     }
 
     
@@ -114,11 +114,11 @@ void free_s_page(struct hash *s_pt, struct s_page *sp){
 }
 
 void s_page_delete(struct hash *s_pt, struct s_page *sp){
-    hash_delete(s_pt, sp->hash_elem);
+    hash_delete(s_pt, &sp->hash_elem);
     free(sp);
 }
 
-void destructor(struct hash_elem *e, void *aux){
+void destructor(struct hash_elem *e, void *aux UNUSED){
     struct s_page *sp;
     sp = hash_entry(e, struct s_page, hash_elem);
     free(sp);
