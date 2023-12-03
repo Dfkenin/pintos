@@ -76,7 +76,6 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name_, &if_.eip, &if_.esp);
-  printf("load finished, success : %d\n", success);
   
   /* If load failed, quit. */
   if (!success) {
@@ -97,8 +96,6 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
   file_name = (char*)(*esp);
   save_ptr = file_name;
-
-  printf("command to stack\n");
    
   /* Argument Passing */
   for (token = strtok_r (NULL, " ", &save_ptr); token != NULL;
@@ -106,9 +103,6 @@ start_process (void *file_name_)
     while(*save_ptr == ' ') save_ptr++;
     argc++; // swap delimiter to null terminations
   }
-
-  
-  printf("agrument passing\n");
   
   *esp -= sizeof(char*);
   *(void**)(*esp) = NULL; // argv[argc]
@@ -125,8 +119,6 @@ start_process (void *file_name_)
   *(int*)(*esp) = argc;
   *esp -= sizeof(void*);
   *(void**)(*esp) = NULL; // fake ret
-
-  printf("stack agruments\n");
   
   send_signal(thread_current()->tid, SIG_EXEC);
   
@@ -517,13 +509,13 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       
       */
       //mod 2
-      printf("load segment\n");
-      allocate_s_page(&thread_current()->s_pt, upage, file, ofs, read_bytes, zero_bytes, writable, 0);
+      allocate_s_page(&thread_current()->s_pt, upage, file, ofs, page_read_bytes, page_zero_bytes, writable, 0);
 
       /* Advance. */
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
+      ofs += page_read_bytes;
     }
   return true;
 }
