@@ -7,6 +7,7 @@
 #include "threads/thread.h"
 //mod 2
 #include "vm/page.h"
+#include "userprog/syscall.h"
 
 /* Number of page faults processed. */
 static long long page_fault_cnt;
@@ -164,9 +165,11 @@ page_fault (struct intr_frame *f)
 
   //mod 2
   bool growth = (fault_addr >= f->esp - 32);
-  if (lazy_load(&thread_current()->s_pt, fault_addr, growth)){
+  if (lazy_load(&thread_current()->s_pt, pg_round_down(fault_addr), growth)){
    return;
   }
+
+  exit(-1);
   
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to

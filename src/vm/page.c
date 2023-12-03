@@ -1,6 +1,7 @@
 #include "vm/page.h"
 #include "userprog/syscall.h"
 #include "threads/interrupt.h"
+#include <stdio.h>
 
 
 unsigned hash_func(const struct hash_elem *e, void *aux UNUSED);
@@ -32,7 +33,7 @@ bool less_func(const struct hash_elem *a, const struct hash_elem *b, void *aux U
     return spa->upage < spb->upage;
 }
 
-void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable){
+void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable, int status){
     struct s_page *p;
     
     p = (struct s_page*)malloc(sizeof(struct s_page));
@@ -45,7 +46,7 @@ void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t of
     p->zero_bytes = zero_bytes;
     p->writable = writable;
 
-    p->swap_index = NULL;
+    p->status = status;
 
     hash_insert(s_pt, &p->hash_elem);
 }
@@ -67,7 +68,7 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
                 return false;
             }
             if (!get_s_page(s_pt, upage)){
-                allocate_s_page(s_pt, upage, NULL, 0, 0, 0, true);
+                allocate_s_page(s_pt, upage, NULL, 0, 0, 0, true, 0);
                 sp = get_s_page(s_pt, upage);
             }
         } 
@@ -79,7 +80,7 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
     if (kpage == NULL)
     return false;
 
-    if (sp->swap_index == NULL){
+    if (sp->status == 0){
         if (sp->file){
             if (file_read (sp->file, kpage, sp->read_bytes) != (int) sp->read_bytes)
             {
@@ -89,22 +90,27 @@ bool lazy_load(struct hash *s_pt, void *upage, bool growth){
         }
         memset (kpage + sp->read_bytes, 0, sp->zero_bytes);
     }
-    else{
+    else if (sp->status == 1){
         swap_in(sp->swap_index, kpage);
     }
+    else{
+        return false;
+    }
 
-    
+    printf("I'm here !!!\n");
 
     struct thread *t = thread_current ();
     if (!(pagedir_get_page (t->pagedir, upage) == NULL
           && pagedir_set_page (t->pagedir, upage, kpage, sp->writable))) 
     {
+
         free_frame (kpage);
         return false;
     }
 
 
     sp->kpage = kpage;
+    sp->status = 2;
     return true;
 }
 

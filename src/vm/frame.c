@@ -95,6 +95,7 @@ void evict_frame(){
 
     sp = get_s_page(&thread_current()->s_pt, f->upage);
     sp->swap_index = swap_out(f->kpage);
+    sp->status = 1;
 
     free_frame(f->kpage);
 }

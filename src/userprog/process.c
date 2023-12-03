@@ -509,7 +509,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       
       */
       //mod 2
-      allocate_s_page(&thread_current()->s_pt, upage, file, ofs, read_bytes, zero_bytes, writable);
+      allocate_s_page(&thread_current()->s_pt, upage, file, ofs, read_bytes, zero_bytes, writable, 0);
 
       /* Advance. */
       read_bytes -= page_read_bytes;

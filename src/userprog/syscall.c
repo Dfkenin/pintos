@@ -480,7 +480,7 @@ mid_t mmap(int fd, void *addr){
 
   for (ofs = 0; ofs < size; ){
     read_bytes = ofs + PGSIZE < size ? PGSIZE : size - ofs;
-    allocate_s_page(&t->s_pt, addr, file, ofs, read_bytes, PGSIZE - read_bytes, true);
+    allocate_s_page(&t->s_pt, addr, file, ofs, read_bytes, PGSIZE - read_bytes, true, 0);
     
     ofs += PGSIZE; addr += PGSIZE;
   }
