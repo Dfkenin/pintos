@@ -36,7 +36,7 @@ bool less_func(const struct hash_elem *a, const struct hash_elem *b, void *aux U
 void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable, int status){
     struct s_page *p;
     
-    p = (struct s_page*)malloc(sizeof(struct s_page));
+    p = (struct s_page*)malloc(sizeof *p);
     p->kpage = NULL;
     p->upage = upage;
 
@@ -69,7 +69,7 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
             if (fault_addr < PHYS_BASE - 2048*PGSIZE) {
                 return false;
             }
-            allocate_s_page(s_pt, upage, NULL, 0, 0, 0, true, 0);
+            allocate_s_page(s_pt, upage, NULL, 0, 0, PGSIZE, true, 0);
             sp = get_s_page(s_pt, upage);
         }
         else{
@@ -87,7 +87,7 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
 
     if (sp->status == 0){
         if (sp->file){
-            if (file_read (sp->file, kpage, sp->read_bytes) != (int) sp->read_bytes)
+            if (file_read_at (sp->file, kpage, sp->read_bytes, sp->ofs) != (int) sp->read_bytes)
             {
                 free_frame (kpage);
                 return false;

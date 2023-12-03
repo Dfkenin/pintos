@@ -33,6 +33,7 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
+  printf("execute file\n");
   char *fn_copy;
   char *save_ptr;
   tid_t tid;
@@ -121,6 +122,8 @@ start_process (void *file_name_)
   *(void**)(*esp) = NULL; // fake ret
   
   send_signal(thread_current()->tid, SIG_EXEC);
+
+  printf("go to intr_exit\n");
   
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -180,14 +183,12 @@ process_exit (void)
     file_close(f_e->file_ptr);
     free(f_e);
   }
-  printf("pexit 1\n");
+
   //mod 7
   for (int i = 1; i < cur->next_mid; ++i){
     munmap(i);
   }
-  printf("pexit 2\n");
   s_pt_delete(&cur->s_pt);
-  printf("pexit 3\n");
   
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
