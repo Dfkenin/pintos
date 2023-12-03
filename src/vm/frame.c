@@ -1,6 +1,5 @@
 #include "vm/frame.h"
 #include "userprog/syscall.h"
-#include "threads/synch.h"
 
 
 static struct list ft;

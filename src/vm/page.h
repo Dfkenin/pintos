@@ -1,13 +1,11 @@
 #ifndef VM_PAGE_H
 #define VM_PAGE_H
 
-#include "threads/thread.h"
 #include <hash.h>
 #include "filesys/file.h"
 #include "filesys/off_t.h"
-#include "vm/frame.h"
-#include "threads/vaddr.h"
 #include <stdio.h>
+#include "vm/frame.h"
 
 struct s_page{
     void *kpage;

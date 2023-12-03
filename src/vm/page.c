@@ -1,7 +1,5 @@
 #include "vm/page.h"
 #include "userprog/syscall.h"
-#include "userprog/pagedir.h"
-#include "vm/swap.h"
 #include "threads/interrupt.h"
 
 

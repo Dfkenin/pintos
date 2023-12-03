@@ -15,6 +15,8 @@
 #include "userprog/process.h"
 #include "userprog/signal.h"
 #endif
+//mod 3
+#include "vm/page.h"
 
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top

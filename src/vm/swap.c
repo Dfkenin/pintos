@@ -1,5 +1,4 @@
 #include "vm/swap.h"
-#include "threads/synch.h"
 #include "userprog/syscall.h"
 
 static struct bitmap *swap_table;

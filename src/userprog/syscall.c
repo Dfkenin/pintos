@@ -8,6 +8,8 @@
 #include "userprog/process.h"
 #include "threads/malloc.h"
 #include "threads/vaddr.h"
+//mod 5
+#include "vm/page.h"
 
 static void syscall_handler (struct intr_frame *);
 
