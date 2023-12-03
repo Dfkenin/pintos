@@ -47,7 +47,8 @@ void *free_frame(void *kpage){
     struct frame *f;
     struct list_elem *e;
     for (e = list_begin(&ft); e != list_end(&ft); e = list_next(e)){
-        if (kpage == list_entry(e, struct frame, list_elem)->kpage){
+        f = list_entry(e, struct frame, list_elem);
+        if (kpage == f->kpage){
             break;
         }
     }
@@ -56,11 +57,11 @@ void *free_frame(void *kpage){
         exit(-1);
     }
 
-    palloc_free_page(e->kpage);
-    pagedir_clear_page(e->t->pagedir, e->upage);
+    palloc_free_page(f->kpage);
+    pagedir_clear_page(f->t->pagedir, f->upage);
     
-    list_remove(&e->lru);
-    free(e);
+    list_remove(&f->lru);
+    free(f);
 }
 
 void evict_frame(){
