@@ -113,6 +113,8 @@ struct thread
 
     //mod 3
     struct hash s_pt;
+    //mod 4
+    void *esp;
     //mod 5
     struct list memmap_table;
     mid_t next_mid;

@@ -122,6 +122,9 @@ syscall_handler (struct intr_frame *f)
   if(syscall_num < 0 || syscall_num >= 20) {
     kill_process();
   }
+
+  //mod 4
+  thread_current()->esp = f->esp;
   
   (syscall_table[syscall_num])(f);
 }
