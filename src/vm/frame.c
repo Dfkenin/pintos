@@ -96,8 +96,11 @@ void evict_frame(){
     printf("evict_frame 2\n");
 
     f = list_entry(e, struct frame, lru);
+    printf("where 0\n");
     while (pagedir_is_accessed(f->t->pagedir, f->upage)){
+        printf("where 1\n");
         pagedir_set_accessed(f->t->pagedir, f->upage, false);
+        printf("where 2\n");
 
         if (list_next(e) == list_end(&ft)){
             e = list_begin(&ft);
@@ -106,6 +109,7 @@ void evict_frame(){
             e = list_next(e);
         }
         f = list_entry(e, struct frame, lru);
+        printf("where 3\n");
     }
     
     printf("evict_frame 3\n");
