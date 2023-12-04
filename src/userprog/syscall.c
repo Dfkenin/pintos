@@ -123,7 +123,7 @@ syscall_handler (struct intr_frame *f)
     kill_process();
   }
   
-  printf("Syscall num : %d\n", syscall_num);
+  //printf("Syscall num : %d\n", syscall_num);
   (syscall_table[syscall_num])(f);
 }
 
