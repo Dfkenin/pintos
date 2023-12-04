@@ -40,7 +40,11 @@ void *allocate_frame(enum palloc_flags flags, void *upage){
     f->kpage = kpage;
     f->upage = upage;
     f->t = thread_current();
+    if (list_empty(&ft)){
+        lru_pointer = &f->lru;
+    }
     list_push_back(&ft, &f->lru);
+
 
     return f->kpage;
 }
@@ -72,13 +76,6 @@ void evict_frame(){
     struct frame *f;
     printf("evict_frame 0\n");
 
-    if (e == NULL){
-        printf("evict_frame 1\n");
-        e = list_begin(&ft);
-        printf("lru_pointer : %p\n", lru_pointer);
-    }
-    printf("evict_frame 1\n");
-
     f = list_entry(e, struct frame, lru);
     while (pagedir_is_accessed(f->t->pagedir, f->upage)){
         pagedir_set_accessed(f->t->pagedir, f->upage, false);
@@ -97,6 +94,7 @@ void evict_frame(){
     sp->swap_index = swap_out(f->kpage);
     sp->status = 1;
     printf("evict_frame 3\n");
+    lru_pointer = list_remove(e);
 
     free_frame(f->kpage);
     printf("evict_frame 4\n");
