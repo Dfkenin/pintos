@@ -252,32 +252,39 @@ void sys_open (struct intr_frame * f) {
   struct list_elem *e;
   struct fd_elem *f_elem;
   struct fd_elem *fd_elem;
+  printf("open 0\n");
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
 
   name = *(char **)(f->esp + 4);
   itr = name;
+  printf("open 1 the %s\n", name);
 
   if(!validate_read((void*)name, 1)) kill_process();
+  printf("open 2\n");
 
   while(*itr != '\0') {
     itr++;
     if(!validate_read((void*)itr, 1)) kill_process();
   }
+  printf("open 3\n");
   
   if(itr == name) {
     f->eax = -1;
     return;
   }
+  printf("open 4\n");
   
   t = thread_current();
   file = filesys_open(name); //if fails, it returns NULL
   f_elem = malloc(sizeof(struct fd_elem));
+  printf("open 5\n");
   
   if(file == NULL) {
     f->eax = -1;
     return;
   }
+  printf("open 6\n");
 
   f_elem->fd = 2;
   f_elem->file_ptr = file;
@@ -296,6 +303,7 @@ void sys_open (struct intr_frame * f) {
   }
   list_push_back(&t->fd_table, &f_elem->elem);
   f->eax = f_elem->fd;
+  printf("open 7\n");
 }
 
 //int filesize (int fd)
