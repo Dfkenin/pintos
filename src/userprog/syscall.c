@@ -276,11 +276,18 @@ void sys_open (struct intr_frame * f) {
   printf("open 4\n");
   
   t = thread_current();
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   file = filesys_open(name); //if fails, it returns NULL
   f_elem = malloc(sizeof(struct fd_elem));
   printf("open 5\n");
   
   if(file == NULL) {
+    if (need_acquire){
+      lock_release(&file_lock);
+    }
     f->eax = -1;
     return;
   }
@@ -288,6 +295,10 @@ void sys_open (struct intr_frame * f) {
 
   f_elem->fd = 2;
   f_elem->file_ptr = file;
+  
+  if (need_acquire){
+    lock_release(&file_lock);
+  }
 
   for (e = list_begin (&t->fd_table); e != list_end (&t->fd_table);
        e = list_next (e))
