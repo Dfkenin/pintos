@@ -220,12 +220,6 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
-  //mod ? for synch
-#ifdef USERPROG
-  sema_init(&t->cur_wait, 0);
-  t->exit_code = -1;
-#endif
-
   /* Add to run queue. */
   thread_unblock (t);
 

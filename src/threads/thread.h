@@ -6,8 +6,6 @@
 #include <stdint.h>
 //mod 3
 #include <hash.h>
-//mod ? for synch
-#include "threads/synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -111,10 +109,6 @@ struct thread
     struct list fd_table;
 
     struct file *current_file;
-
-    //mod ? for synch
-    struct semaphore cur_wait;
-    int exit_code;
 #endif
 
     //mod 3
