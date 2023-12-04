@@ -153,24 +153,30 @@ void exit(int status){
 
 // pid_t exec(const char *cmd_line)
 void sys_exec (struct intr_frame * f) {
+  printf("exec 0\n");
   char *cmd_line;
   pid_t pid;
   char *itr;
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
+  printf("exec 1\n");
   
   cmd_line = *(char**)(f->esp + 4);
   itr = cmd_line;
   
   if(!validate_read((void*)cmd_line, 1)) kill_process();
+  printf("exec 2\n");
   
   while(*itr != '\0') {
     itr++;
     if(!validate_read((void*)itr, 1)) kill_process();
   }
+  printf("exec 3\n");
   
   pid = process_execute(cmd_line);
+  printf("exec 4\n");
   f->eax = pid == -1 ? pid : get_signal(pid, SIG_EXEC);
+  printf("exec 5 with pid %d\n", pid);
 }
 
 // int wait (pid_t pid)
