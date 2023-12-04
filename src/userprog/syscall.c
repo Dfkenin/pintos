@@ -561,7 +561,7 @@ mid_t mmap(int fd, void *addr){
 
   memmap = (struct memmap*)malloc(sizeof(struct memmap));
   memmap->mid = allocate_mid(t);
-  memmap->file = file;
+  memmap->file = open;
   memmap->addr = addr; // for munmap
   list_push_back(&t->memmap_table, &memmap->elem);
   printf("mmap 5\n");
