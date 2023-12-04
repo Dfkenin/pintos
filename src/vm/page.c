@@ -90,17 +90,17 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
 
     if (sp->status == 0){
         if (sp->file){
-            if (!lock_held_by_current_thread(&file_lock)){
+            bool need_acquire = !lock_held_by_current_thread(&file_lock);
+            if (need_acquire){
                 lock_acquire(&file_lock);
             }
             if (file_read_at (sp->file, kpage, sp->read_bytes, sp->ofs) != (int) sp->read_bytes)
             {
-                lock_release(&file_lock);
+                if (need_acquire){
+                    lock_release(&file_lock);
+                }
                 free_frame (kpage);
                 return false;
-            }
-            if (!lock_held_by_current_thread(&file_lock)){
-                lock_release(&file_lock);
             }
         }
         memset (kpage + sp->read_bytes, 0, sp->zero_bytes);
