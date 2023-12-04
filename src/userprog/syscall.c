@@ -355,6 +355,10 @@ void sys_read (struct intr_frame * f) {
   if(!validate_write(buffer, size)) kill_process();
 
   //printf("fd is %d\n", fd);
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   
   if(fd == 0) {
     c = input_getc();
@@ -375,15 +379,11 @@ void sys_read (struct intr_frame * f) {
       f->eax = -1;
       return;
     }
-    bool need_acquire = !lock_held_by_current_thread(&file_lock);
-    if (need_acquire){
-      lock_acquire(&file_lock);
-    }
     f->eax = file_read(file, buffer, size);
-    if (need_acquire){
-      lock_release(&file_lock);
-    }
     //printf("read end with %d\n", f->eax);
+  }
+  if (need_acquire){
+    lock_release(&file_lock);
   }
 }
 
@@ -403,6 +403,10 @@ void sys_write (struct intr_frame * f) {
   
   if(!validate_read(buffer, size)) kill_process();
   
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   if(fd == 0) {
     f->eax = 0; 
   }
@@ -413,16 +417,15 @@ void sys_write (struct intr_frame * f) {
   else {
     if(file == NULL) {
       f->eax = 0;
+      if (need_acquire){
+        lock_release(&file_lock);
+      }
       return;
     }
-    bool need_acquire = !lock_held_by_current_thread(&file_lock);
-    if (need_acquire){
-      lock_acquire(&file_lock);
-    }
     f->eax = file_write (file, buffer, size);
-    if (need_acquire){
-      lock_release(&file_lock);
-    }
+  }
+  if (need_acquire){
+    lock_release(&file_lock);
   }
 }
 
