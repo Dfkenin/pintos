@@ -155,7 +155,7 @@ process_wait (tid_t child_tid)
   struct thread *child = get_thread_from_tid(child_tid);
   int exit_code = child->exit_code;
   printf("child %d before signal\n", child_tid);
-  sema_down(&child->wait);
+  sema_down(&child->cur_wait);
   //int result = get_signal(child_tid, SIG_WAIT);
   printf("child %d after signal\n", child_tid);
   return exit_code;
@@ -221,7 +221,7 @@ process_exit (void)
       pagedir_destroy (pd);
     }
   printf("p exit 5\n");
-  sema_up(&cur->wait);
+  sema_up(&cur->cur_wait);
 }
 
 /* Sets up the CPU for running user code in the current

@@ -111,7 +111,7 @@ struct thread
     struct file *current_file;
 
     //mod ? for synch
-    struct semaphore wait;
+    struct semaphore cur_wait;
     int exit_code;
 #endif
 
