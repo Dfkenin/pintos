@@ -142,11 +142,6 @@ void free_s_page(struct hash *s_pt, struct s_page *sp){
     free(sp);
 }
 
-void s_page_delete(struct hash *s_pt, struct s_page *sp){
-    hash_delete(s_pt, &sp->hash_elem);
-    free(sp);
-}
-
 void destructor(struct hash_elem *e, void *aux UNUSED){
     struct s_page *sp;
     sp = hash_entry(e, struct s_page, hash_elem);
