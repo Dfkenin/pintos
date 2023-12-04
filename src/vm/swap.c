@@ -21,12 +21,15 @@ void swap_table_init(){
 
 size_t swap_out(void *kpage){
     size_t index;
+    printf("swap 0\n");
     lock_acquire(&swap_lock);
     index = bitmap_scan_and_flip(swap_table, 0, 1, 0);
     lock_release(&swap_lock);
+    printf("swap 1 with index %d\n", index);
 
     void *buffer = kpage;
     for (int i = 0; i < nsector; ++i){
+        printf("swap 2-%d\n", i);
         block_write(swap_block, index * nsector + i, buffer);
         buffer += BLOCK_SECTOR_SIZE;
     }

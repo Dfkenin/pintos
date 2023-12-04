@@ -91,6 +91,7 @@ void evict_frame(){
         else{
             e = list_next(e);
         }
+        f = list_entry(e, struct frame, lru);
     }
     
     printf("evict_frame 3\n");
