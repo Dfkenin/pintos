@@ -102,7 +102,9 @@ bool validate_write(void *p, int size) {
 }
 
 void kill_process() {
-  send_signal(-1, SIG_WAIT);
+  //mod ? for synch
+  thread_current()->exit_code = -1;
+  //send_signal(-1, SIG_WAIT);
   printf ("%s: exit(%d)\n", thread_current()->name, -1);
   thread_exit();
 }
@@ -146,7 +148,9 @@ void sys_exit (struct intr_frame * f) {
 }
 
 void exit(int status){
-  send_signal(status, SIG_WAIT);
+  //mod ? for synch
+  thread_current()->exit_code = -1;
+  //send_signal(status, SIG_WAIT);
   printf ("%s: exit(%d)\n", thread_current()->name, status);
   thread_exit();  
 }

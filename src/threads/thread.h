@@ -109,6 +109,10 @@ struct thread
     struct list fd_table;
 
     struct file *current_file;
+
+    //mod ? for synch
+    struct semaphore wait;
+    int exit_code;
 #endif
 
     //mod 3

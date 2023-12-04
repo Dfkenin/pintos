@@ -151,16 +151,21 @@ int
 process_wait (tid_t child_tid) 
 {
   //struct thread *cur = thread_current();
+  //mod ? for synch
+  struct thread *child = get_thread_from_tid(child_tid);
+  int exit_code = child->exit_code;
   printf("child %d before signal\n", child_tid);
-  int result = get_signal(child_tid, SIG_WAIT);
+  sema_down(&child->wait);
+  //int result = get_signal(child_tid, SIG_WAIT);
   printf("child %d after signal\n", child_tid);
-  return result;
+  return exit_code;
 }
 
 /* Free the current process's resources. */
 void
 process_exit (void)
 {
+  printf("p exit 0\n");
   struct thread *cur = thread_current ();
   uint32_t *pd;
   struct signal *sig;
@@ -175,11 +180,13 @@ process_exit (void)
     e = list_remove(e);
     free(sig);
   }
+  printf("p exit 1\n");
   
   if (cur->current_file != NULL) {
     file_allow_write(cur->current_file);
     file_close(cur->current_file);
   }
+  printf("p exit 2\n");
   
   for (e = list_begin (&cur->fd_table); e != list_end (&cur->fd_table); )
   {
@@ -188,12 +195,14 @@ process_exit (void)
     file_close(f_e->file_ptr);
     free(f_e);
   }
+  printf("p exit 3\n");
 
   //mod 7
   for (int i = 1; i < cur->next_mid; ++i){
     munmap(i);
   }
   s_pt_delete(&cur->s_pt);
+  printf("p exit 4\n");
   
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -211,6 +220,8 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+  printf("p exit 5\n");
+  sema_up(&cur->wait);
 }
 
 /* Sets up the CPU for running user code in the current
