@@ -6,6 +6,8 @@
 #include <stdint.h>
 //mod 3
 #include <hash.h>
+//mod ? for synch
+#include "threads/synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
