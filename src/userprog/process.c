@@ -537,7 +537,7 @@ setup_stack (void **esp)
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
       if (success){
-        //allocate_s_page(&thread_current()->s_pt, PHYS_BASE - PGSIZE, NULL, 0, 0, 0, true, 2);
+        allocate_s_page(&thread_current()->s_pt, PHYS_BASE - PGSIZE, NULL, 0, 0, 0, true, 2);
         *esp = PHYS_BASE;
       }
       else
