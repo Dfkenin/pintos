@@ -126,7 +126,7 @@ syscall_handler (struct intr_frame *f)
   //mod 4 for pt-grow-stk-sc
   thread_current()->esp = f->esp;
   
-  //printf("Syscall num : %d\n", syscall_num);
+  printf("Syscall num : %d\n", syscall_num);
   (syscall_table[syscall_num])(f);
 }
 
