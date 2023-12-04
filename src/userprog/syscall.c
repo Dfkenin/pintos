@@ -126,7 +126,7 @@ syscall_handler (struct intr_frame *f)
   //mod 4 for pt-grow-stk-sc
   thread_current()->esp = f->esp;
   
-  //printf("Syscall num : %d\n", syscall_num);
+  printf("Syscall num : %d\n", syscall_num);
   (syscall_table[syscall_num])(f);
 }
 
@@ -582,10 +582,12 @@ mid_t mmap(int fd, void *addr){
 
 void sys_munmap(struct intr_frame * f){
   mid_t mapping;
+  printf("munmap 0\n");
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
   
   mapping = *(mid_t*)(f->esp + 4);
+  printf("munmap 1 with mid %d\n", mapping);
 
   munmap(mapping);
 }
@@ -597,6 +599,7 @@ void munmap(mid_t mapping){
   off_t ofs;
   struct memmap *memmap;
   struct list_elem *e;
+  printf("munmap 2\n");
 
   t = thread_current();
   for (e = list_begin(&t->memmap_table); e != list_end(&t->memmap_table); e = list_next(e)){
@@ -606,8 +609,10 @@ void munmap(mid_t mapping){
     }
   }
   if (e == list_end(&t->memmap_table)){
+    printf("munmap 3\n");
     return;
   }
+  printf("munmap 4\n");
   
   bool need_acquire = !lock_held_by_current_thread(&file_lock);
   if (need_acquire){
@@ -615,6 +620,7 @@ void munmap(mid_t mapping){
   }
   size = file_length(memmap->file);
   addr = memmap->addr;
+  printf("munmap 5\n");
 
   for (ofs = 0; ofs < size; ){
     struct s_page *cur_page = get_s_page(&t->s_pt, addr);
@@ -625,6 +631,7 @@ void munmap(mid_t mapping){
 
     ofs += PGSIZE; addr += PGSIZE;
   }
+  printf("munmap 6\n");
   if (need_acquire){
     lock_release(&file_lock);
   }
