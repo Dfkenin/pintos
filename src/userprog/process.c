@@ -70,7 +70,7 @@ start_process (void *file_name_)
   bool success;
   
   void **esp = &if_.esp;
-  printf("start process of %s\n", file_name);
+  //printf("start process of %s\n", file_name);
   
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -79,7 +79,7 @@ start_process (void *file_name_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name_, &if_.eip, &if_.esp);
 
-  printf("start process of %s loaded success? : %d\n", file_name, success);
+  //printf("start process of %s loaded success? : %d\n", file_name, success);
   
   /* If load failed, quit. */
   if (!success) {
@@ -151,9 +151,9 @@ int
 process_wait (tid_t child_tid) 
 {
   //struct thread *cur = thread_current();
-  printf("child %d before signal\n", child_tid);
+  //printf("child %d before signal\n", child_tid);
   int result = get_signal(child_tid, SIG_WAIT);
-  printf("child %d after signal\n", child_tid);
+  //printf("child %d after signal\n", child_tid);
   return result;
 }
 

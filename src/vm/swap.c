@@ -37,7 +37,7 @@ size_t swap_out(void *kpage){
 }
 
 void swap_in(size_t index, void *kpage){
-    printf("swap 0\n");
+    //printf("swap 0\n");
     lock_acquire(&swap_lock);
     if (bitmap_test(swap_table, index) == 0){
         exit(-1);
@@ -45,12 +45,12 @@ void swap_in(size_t index, void *kpage){
 
     bitmap_set(swap_table, index, 0);
     lock_release(&swap_lock);
-    printf("swap 1\n");
+    //printf("swap 1\n");
 
     void *buffer = kpage;
     for (int i = 0; i < nsector; ++i){
         block_read(swap_block, index * nsector + i, buffer);
         buffer += BLOCK_SECTOR_SIZE;
     }
-    printf("swap 2\n");
+    //printf("swap 2\n");
 }

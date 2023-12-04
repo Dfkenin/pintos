@@ -126,7 +126,7 @@ syscall_handler (struct intr_frame *f)
   //mod 4 for pt-grow-stk-sc
   thread_current()->esp = f->esp;
   
-  printf("Syscall num : %d\n", syscall_num);
+  //printf("Syscall num : %d\n", syscall_num);
   (syscall_table[syscall_num])(f);
 }
 
@@ -153,30 +153,30 @@ void exit(int status){
 
 // pid_t exec(const char *cmd_line)
 void sys_exec (struct intr_frame * f) {
-  printf("exec 0\n");
+  //printf("exec 0\n");
   char *cmd_line;
   pid_t pid;
   char *itr;
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
-  printf("exec 1\n");
+  //printf("exec 1\n");
   
   cmd_line = *(char**)(f->esp + 4);
   itr = cmd_line;
   
   if(!validate_read((void*)cmd_line, 1)) kill_process();
-  printf("exec 2\n");
+  //printf("exec 2\n");
   
   while(*itr != '\0') {
     itr++;
     if(!validate_read((void*)itr, 1)) kill_process();
   }
-  printf("exec 3\n");
+  //printf("exec 3\n");
   
   pid = process_execute(cmd_line);
-  printf("exec 4\n");
+  //printf("exec 4\n");
   f->eax = pid == -1 ? pid : get_signal(pid, SIG_EXEC);
-  printf("exec 5 with pid %d\n", pid);
+  //printf("exec 5 with pid %d\n", pid);
 }
 
 // int wait (pid_t pid)
@@ -184,7 +184,7 @@ void sys_wait (struct intr_frame * f) {
   if(!validate_read(f->esp + 4, 4)) kill_process();
   
   pid_t pid = *(pid_t*)(f->esp + 4);
-  printf("file lock? : %d\n", lock_held_by_current_thread(&file_lock));
+  //printf("file lock? : %d\n", lock_held_by_current_thread(&file_lock));
   f->eax = process_wait(pid);
 }
 
@@ -252,28 +252,28 @@ void sys_open (struct intr_frame * f) {
   struct list_elem *e;
   struct fd_elem *f_elem;
   struct fd_elem *fd_elem;
-  printf("open 0\n");
+  //printf("open 0\n");
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
 
   name = *(char **)(f->esp + 4);
   itr = name;
-  printf("open 1 the %s\n", name);
+  //printf("open 1 the %s\n", name);
 
   if(!validate_read((void*)name, 1)) kill_process();
-  printf("open 2\n");
+  //printf("open 2\n");
 
   while(*itr != '\0') {
     itr++;
-    if(!validate_read((void*)itr, 1)) kill_process();
+    //if(!validate_read((void*)itr, 1)) kill_process();
   }
-  printf("open 3\n");
+  //printf("open 3\n");
   
   if(itr == name) {
     f->eax = -1;
     return;
   }
-  printf("open 4\n");
+  //printf("open 4\n");
   
   t = thread_current();
   bool need_acquire = !lock_held_by_current_thread(&file_lock);
@@ -282,7 +282,7 @@ void sys_open (struct intr_frame * f) {
   }
   file = filesys_open(name); //if fails, it returns NULL
   f_elem = malloc(sizeof(struct fd_elem));
-  printf("open 5\n");
+  //printf("open 5\n");
   
   if(file == NULL) {
     if (need_acquire){
@@ -291,7 +291,7 @@ void sys_open (struct intr_frame * f) {
     f->eax = -1;
     return;
   }
-  printf("open 6\n");
+  //printf("open 6\n");
 
   f_elem->fd = 2;
   f_elem->file_ptr = file;
@@ -314,7 +314,7 @@ void sys_open (struct intr_frame * f) {
   }
   list_push_back(&t->fd_table, &f_elem->elem);
   f->eax = f_elem->fd;
-  printf("open 7\n");
+  //printf("open 7\n");
 }
 
 //int filesize (int fd)
