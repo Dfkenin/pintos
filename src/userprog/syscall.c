@@ -320,7 +320,7 @@ void sys_read (struct intr_frame * f) {
   
   if(!validate_write(buffer, size)) kill_process();
 
-  printf("fd is %d\n", fd);
+  //printf("fd is %d\n", fd);
   
   if(fd == 0) {
     c = input_getc();
