@@ -297,6 +297,7 @@ void sys_filesize (struct intr_frame * f) {
 
 //int read (int fd, void *buffer, unsigned size)
 void sys_read (struct intr_frame * f) {
+  printf("read entered.\n");
   char c;
   unsigned count = 0;
   int fd;
@@ -305,11 +306,14 @@ void sys_read (struct intr_frame * f) {
   struct file *file;
   
   if(!validate_read(f->esp + 4, 12)) kill_process();
+  printf("read 1.\n");
   
   fd = *(int*)(f->esp + 4);
   buffer = *(uint8_t**)(f->esp + 8);
   size = *(unsigned*)(f->esp + 12);
+  printf("read 2.\n");
   file = get_file_from_fd(fd); 
+  printf("read 3.\n");
   
   if(!validate_write(buffer, size)) kill_process();
 
