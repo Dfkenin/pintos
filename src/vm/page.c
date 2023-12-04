@@ -66,12 +66,12 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
 
     sp = get_s_page(s_pt, upage);
     if (sp == NULL){ //case 나누면 stack growth도..?
-        printf("%d\n", growth);
+        //printf("%d\n", growth);
         if (growth){
             if (fault_addr < PHYS_BASE - 2048*PGSIZE) {
                 return false;
             }
-            printf("here\n");
+            //printf("here\n");
             allocate_s_page(s_pt, upage, NULL, 0, 0, PGSIZE, true, 0);
             sp = get_s_page(s_pt, upage);
         }
@@ -80,24 +80,24 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
         }
     }
 
-    printf("lazy_load pass 1\n");
+    //printf("lazy_load pass 1\n");
     // from process.c load_segment func.
     uint8_t *kpage = allocate_frame (PAL_USER, upage);
     if (kpage == NULL)
     return false;
 
-    printf("lazy_load pass 2 with status %d\n", sp->status);
+    //printf("lazy_load pass 2 with status %d\n", sp->status);
 
     if (sp->status == 0){
         if (sp->file){
-            printf("file ok\n");
+            //printf("file ok\n");
             bool need_acquire = !lock_held_by_current_thread(&file_lock);
             if (need_acquire){
                 lock_acquire(&file_lock);
             }
             if (file_read_at (sp->file, kpage, sp->read_bytes, sp->ofs) != (int) sp->read_bytes)
             {
-                printf("bad data\n");
+                //printf("bad data\n");
                 if (need_acquire){
                     lock_release(&file_lock);
                 }
@@ -119,18 +119,18 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
         return false;
     }
 
-    printf("lazy_load pass 3\n");
+    //printf("lazy_load pass 3\n");
 
     struct thread *t = thread_current ();
     if (!(pagedir_get_page (t->pagedir, upage) == NULL
           && pagedir_set_page (t->pagedir, upage, kpage, sp->writable))) 
     {
-        printf("here condition %d\n", (pagedir_get_page(t->pagedir, upage) == NULL));
+        //printf("here condition %d\n", (pagedir_get_page(t->pagedir, upage) == NULL));
         free_frame (kpage);
         return false;
     }
 
-    printf("lazy_load pass 4\n");
+    //printf("lazy_load pass 4\n");
 
     sp->kpage = kpage;
     sp->status = 2;

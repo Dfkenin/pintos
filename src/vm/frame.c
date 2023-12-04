@@ -57,28 +57,28 @@ void *allocate_frame(enum palloc_flags flags, void *upage){
 void *free_frame(void *kpage){
     struct frame *f;
     struct list_elem *e;
-    printf("free 0\n");
+    //printf("free 0\n");
     for (e = list_begin(&ft); e != list_end(&ft); e = list_next(e)){
         f = list_entry(e, struct frame, lru);
         if (kpage == f->kpage){
             break;
         }
     }
-    printf("free 1\n");
+    //printf("free 1\n");
     if (e == list_end(&ft)){
         exit(-1);
     }
-    printf("free 2\n");
+    //printf("free 2\n");
 
     palloc_free_page(f->kpage);
-    printf("free 3\n");
+    //printf("free 3\n");
     pagedir_clear_page(f->t->pagedir, f->upage);
-    printf("free 4\n");
+    //printf("free 4\n");
     
     lru_pointer = list_remove(&f->lru);
-    printf("lru_pointer now at %p\n", lru_pointer);
+    //printf("lru_pointer now at %p\n", lru_pointer);
     free(f);
-    printf("free 5\n");
+    //printf("free 5\n");
 }
 
 void evict_frame(){

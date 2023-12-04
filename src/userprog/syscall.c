@@ -126,7 +126,7 @@ syscall_handler (struct intr_frame *f)
   //mod 4 for pt-grow-stk-sc
   thread_current()->esp = f->esp;
   
-  printf("Syscall num : %d\n", syscall_num);
+  //printf("Syscall num : %d\n", syscall_num);
   (syscall_table[syscall_num])(f);
 }
 
@@ -474,14 +474,14 @@ void sys_close (struct intr_frame * f) {
   struct thread *t;
   struct list_elem *e;
   struct fd_elem *fd_elem;
-  printf("close 0\n");
+  //printf("close 0\n");
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
-  printf("close 1\n");
+  //printf("close 1\n");
   
   fd = *(int*)(f->esp + 4);
   file = get_file_from_fd(fd);
-  printf("close 2\n");
+  //printf("close 2\n");
   t = thread_current();
     
   bool need_acquire = !lock_held_by_current_thread(&file_lock);
@@ -492,17 +492,17 @@ void sys_close (struct intr_frame * f) {
   if (need_acquire){
     lock_release(&file_lock);
   }
-  printf("close 3\n");
+  //printf("close 3\n");
   
   for (e = list_begin (&t->fd_table); e != list_end (&t->fd_table);
        e = list_next (e))
   {
     fd_elem = list_entry (e, struct fd_elem, elem);
     if(fd_elem->fd == fd) {
-      printf("close 4\n");
+      //printf("close 4\n");
       list_remove(e);
       free(fd_elem);
-      printf("close 5\n");
+      //printf("close 5\n");
       return;
     }
   }
@@ -516,7 +516,7 @@ void sys_mmap(struct intr_frame * f){
   
   fd = *(int*)(f->esp + 4);
   addr = *(void**)(f->esp + 8);
-  printf("mmap 0 with %d, %p\n", fd, addr);
+  //printf("mmap 0 with %d, %p\n", fd, addr);
   f->eax = mmap(fd, addr);
 }
 
@@ -530,7 +530,7 @@ mid_t mmap(int fd, void *addr){
   uint32_t read_bytes;
   
   file = get_file_from_fd(fd);  
-  printf("mmap 1\n");
+  //printf("mmap 1\n");
 
   t = thread_current();
   size = file_length(file);
@@ -538,13 +538,13 @@ mid_t mmap(int fd, void *addr){
   if (!file || !addr || (int)addr%PGSIZE!=0){
     return -1;
   }
-  printf("mmap 2\n");
+  //printf("mmap 2\n");
   for (ofs = 0; ofs < size; ofs += PGSIZE){
     if (get_s_page(&t->s_pt, addr + ofs)){
       return -1;
     }
   }
-  printf("mmap 3\n");
+  //printf("mmap 3\n");
 
   bool need_acquire = !lock_held_by_current_thread(&file_lock);
   if (need_acquire){
@@ -555,7 +555,7 @@ mid_t mmap(int fd, void *addr){
     if (need_acquire){
       lock_release(&file_lock);
     }
-    printf("mmap 4\n");
+    //printf("mmap 4\n");
     return -1;
   }
 
@@ -564,11 +564,11 @@ mid_t mmap(int fd, void *addr){
   memmap->file = open;
   memmap->addr = addr; // for munmap
   list_push_back(&t->memmap_table, &memmap->elem);
-  printf("mmap 5\n");
+  //printf("mmap 5\n");
 
   for (ofs = 0; ofs < size; ){
     read_bytes = ofs + PGSIZE < size ? PGSIZE : size - ofs;
-    allocate_s_page(&t->s_pt, addr, file, ofs, read_bytes, PGSIZE - read_bytes, true, 0);
+    allocate_s_page(&t->s_pt, addr, open, ofs, read_bytes, PGSIZE - read_bytes, true, 0);
     
     ofs += PGSIZE; addr += PGSIZE;
   }
@@ -576,18 +576,18 @@ mid_t mmap(int fd, void *addr){
   if (need_acquire){
     lock_release(&file_lock);
   }
-  printf("mmap 6\n");
+  //printf("mmap 6\n");
   return memmap->mid;
 }
 
 void sys_munmap(struct intr_frame * f){
   mid_t mapping;
-  printf("munmap 0\n");
+  //printf("munmap 0\n");
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
   
   mapping = *(mid_t*)(f->esp + 4);
-  printf("munmap 1 with mid %d\n", mapping);
+  //printf("munmap 1 with mid %d\n", mapping);
 
   munmap(mapping);
 }
@@ -599,7 +599,7 @@ void munmap(mid_t mapping){
   off_t ofs;
   struct memmap *memmap;
   struct list_elem *e;
-  printf("munmap 2\n");
+  //printf("munmap 2\n");
 
   t = thread_current();
   for (e = list_begin(&t->memmap_table); e != list_end(&t->memmap_table); e = list_next(e)){
@@ -609,10 +609,10 @@ void munmap(mid_t mapping){
     }
   }
   if (e == list_end(&t->memmap_table)){
-    printf("munmap 3\n");
+    //printf("munmap 3\n");
     return;
   }
-  printf("munmap 4\n");
+  //printf("munmap 4\n");
   
   bool need_acquire = !lock_held_by_current_thread(&file_lock);
   if (need_acquire){
@@ -620,7 +620,7 @@ void munmap(mid_t mapping){
   }
   size = file_length(memmap->file);
   addr = memmap->addr;
-  printf("munmap 5\n");
+  //printf("munmap 5\n");
 
   for (ofs = 0; ofs < size; ){
     struct s_page *cur_page = get_s_page(&t->s_pt, addr);
@@ -631,7 +631,7 @@ void munmap(mid_t mapping){
 
     ofs += PGSIZE; addr += PGSIZE;
   }
-  printf("munmap 6\n");
+  //printf("munmap 6\n");
   if (need_acquire){
     lock_release(&file_lock);
   }
