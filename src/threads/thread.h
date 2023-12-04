@@ -113,7 +113,7 @@ struct thread
 
     //mod 3
     struct hash s_pt;
-    //mod 4
+    //mod 4 for pt-grow-stk-sc
     void *esp;
     //mod 5
     struct list memmap_table;

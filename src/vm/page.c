@@ -64,12 +64,12 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
 
     sp = get_s_page(s_pt, upage);
     if (sp == NULL){ //case 나누면 stack growth도..?
-        printf("%d\n", growth);
+        //printf("%d\n", growth);
         if (growth){
             if (fault_addr < PHYS_BASE - 2048*PGSIZE) {
                 return false;
             }
-            printf("here\n");
+            //printf("here\n");
             allocate_s_page(s_pt, upage, NULL, 0, 0, PGSIZE, true, 0);
             sp = get_s_page(s_pt, upage);
         }
@@ -78,7 +78,7 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
         }
     }
 
-    printf("lazy_load pass 1\n");
+    //printf("lazy_load pass 1\n");
     // from process.c load_segment func.
     uint8_t *kpage = allocate_frame (PAL_USER, upage);
     if (kpage == NULL)
