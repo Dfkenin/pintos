@@ -184,7 +184,7 @@ void sys_wait (struct intr_frame * f) {
   if(!validate_read(f->esp + 4, 4)) kill_process();
   
   pid_t pid = *(pid_t*)(f->esp + 4);
-  
+  printf("file lock? : %d\n", lock_held_by_current_thread(&file_lock));
   f->eax = process_wait(pid);
 }
 
