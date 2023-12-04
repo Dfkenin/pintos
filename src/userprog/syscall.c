@@ -297,7 +297,7 @@ void sys_filesize (struct intr_frame * f) {
 
 //int read (int fd, void *buffer, unsigned size)
 void sys_read (struct intr_frame * f) {
-  printf("read entered.\n");
+  //printf("read entered.\n");
   char c;
   unsigned count = 0;
   int fd;
@@ -306,18 +306,18 @@ void sys_read (struct intr_frame * f) {
   struct file *file;
   
   if(!validate_read(f->esp + 4, 12)) kill_process();
-  printf("read 1.\n");
+  //printf("read 1.\n");
   
   fd = *(int*)(f->esp + 4);
   buffer = *(uint8_t**)(f->esp + 8);
   size = *(unsigned*)(f->esp + 12);
-  printf("read 2.\n");
+  //printf("read 2.\n");
   file = get_file_from_fd(fd); 
-  printf("read 3.\n");
+  //printf("read 3.\n");
   
   if(!validate_write(buffer, size)) kill_process();
 
-  printf("fd is %d\n", fd);
+  //printf("fd is %d\n", fd);
   
   if(fd == 0) {
     c = input_getc();
@@ -334,13 +334,13 @@ void sys_read (struct intr_frame * f) {
   }
   else {
     if(file == NULL) {
-      printf("NULL file\n");
+      //printf("NULL file\n");
       f->eax = -1;
       return;
     }
     lock_acquire(&file_lock);
     f->eax = file_read(file, buffer, size);
-    printf("read end with %d\n", f->eax);
+    //printf("read end with %d\n", f->eax);
     lock_release(&file_lock);
   }
 }

@@ -156,7 +156,9 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
   
-  if(!user) {
+  //mod 2
+  //previously !user but changed to my project 2 way due to read-boundary case fail.
+  if(!fault_addr || is_kernel_vaddr(fault_addr) || !not_present) {
     f->error_code = 0;
     f->eip = (void (*)(void)) f->eax;
     f->eax = -1;
@@ -166,12 +168,12 @@ page_fault (struct intr_frame *f)
   //mod 2
   bool growth = (fault_addr >= f->esp - 32);
   //printf("fault_addr: %p, f->esp: %p\n", fault_addr, f->esp);
-  printf("To lazy_load!\n");
+  //printf("To lazy_load!\n");
   if (lazy_load(&thread_current()->s_pt, fault_addr, growth)){
    return;
   }
 
-  printf("f->esp is %p\n", f->esp);
+  //printf("f->esp is %p\n", f->esp);
   exit(-1);
   
   /* To implement virtual memory, delete the rest of the function
