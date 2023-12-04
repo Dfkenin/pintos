@@ -330,7 +330,7 @@ void sys_read (struct intr_frame * f) {
   }
   else {
     if(file == NULL) {
-      print("NULL file\n");
+      printf("NULL file\n");
       f->eax = -1;
       return;
     }
