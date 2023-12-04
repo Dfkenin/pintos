@@ -7,6 +7,8 @@
 unsigned hash_func(const struct hash_elem *e, void *aux UNUSED);
 bool less_func(const struct hash_elem *a, const struct hash_elem *b, void *aux UNUSED);
 
+extern struct lock file_lock;
+
 /*
 void s_pt_init(struct hash *s_pt);
 void allocate_s_page(struct hash *s_pt, void *upage, struct file *file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable);
@@ -88,10 +90,17 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
 
     if (sp->status == 0){
         if (sp->file){
+            if (!lock_held_by_current_thread(&file_lock)){
+                lock_acquire(&file_lock);
+            }
             if (file_read_at (sp->file, kpage, sp->read_bytes, sp->ofs) != (int) sp->read_bytes)
             {
+                lock_release(&file_lock);
                 free_frame (kpage);
                 return false;
+            }
+            if (!lock_held_by_current_thread(&file_lock)){
+                lock_release(&file_lock);
             }
         }
         memset (kpage + sp->read_bytes, 0, sp->zero_bytes);
