@@ -510,6 +510,7 @@ void sys_mmap(struct intr_frame * f){
   
   fd = *(int*)(f->esp + 4);
   addr = *(void**)(f->esp + 8);
+  printf("mmap 0 with %d, %p\n", fd, addr);
   f->eax = mmap(fd, addr);
 }
 
@@ -523,6 +524,7 @@ mid_t mmap(int fd, void *addr){
   uint32_t read_bytes;
   
   file = get_file_from_fd(fd);  
+  printf("mmap 1\n");
 
   t = thread_current();
   size = file_length(file);
@@ -530,11 +532,13 @@ mid_t mmap(int fd, void *addr){
   if (!file || !addr || (int)addr%PGSIZE!=0){
     return -1;
   }
+  printf("mmap 2\n");
   for (ofs = 0; ofs < size; ofs += PGSIZE){
     if (get_s_page(&t->s_pt, addr + ofs)){
       return -1;
     }
   }
+  printf("mmap 3\n");
 
   bool need_acquire = !lock_held_by_current_thread(&file_lock);
   if (need_acquire){
@@ -545,6 +549,7 @@ mid_t mmap(int fd, void *addr){
     if (need_acquire){
       lock_release(&file_lock);
     }
+    printf("mmap 4\n");
     return -1;
   }
 
@@ -553,6 +558,7 @@ mid_t mmap(int fd, void *addr){
   memmap->file = file;
   memmap->addr = addr; // for munmap
   list_push_back(&t->memmap_table, &memmap->elem);
+  printf("mmap 5\n");
 
   for (ofs = 0; ofs < size; ){
     read_bytes = ofs + PGSIZE < size ? PGSIZE : size - ofs;
@@ -561,7 +567,10 @@ mid_t mmap(int fd, void *addr){
     ofs += PGSIZE; addr += PGSIZE;
   }
 
-  lock_release(&file_lock);
+  if (need_acquire){
+    lock_release(&file_lock);
+  }
+  printf("mmap 6\n");
   return memmap->mid;
 }
 
