@@ -102,6 +102,11 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
                 free_frame (kpage);
                 return false;
             }
+            else {
+                if (need_acquire){
+                    lock_release(&file_lock);
+                }
+            }
         }
         memset (kpage + sp->read_bytes, 0, sp->zero_bytes);
     }
