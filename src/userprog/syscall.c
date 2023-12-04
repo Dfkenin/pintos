@@ -206,10 +206,14 @@ void sys_create (struct intr_frame * f) {
     itr++;
     if(!validate_read((void*)itr, 1)) kill_process();
   }
-
-  lock_acquire(&file_lock);  
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   f->eax = filesys_create(name, initial_size);
-  lock_release(&file_lock);
+  if (need_acquire){
+    lock_release(&file_lock);
+  }
 }
 
 //bool remove (const char *file)
@@ -229,9 +233,14 @@ void sys_remove (struct intr_frame * f) {
     if(!validate_read((void*)itr, 1)) kill_process();
   }
   
-  lock_acquire(&file_lock);
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   f->eax = filesys_remove(name);
-  lock_release(&file_lock);
+  if (need_acquire){
+    lock_release(&file_lock);
+  }
 }
 
 //int open (const char *file)
@@ -347,10 +356,15 @@ void sys_read (struct intr_frame * f) {
       f->eax = -1;
       return;
     }
-    lock_acquire(&file_lock);
+    bool need_acquire = !lock_held_by_current_thread(&file_lock);
+    if (need_acquire){
+      lock_acquire(&file_lock);
+    }
     f->eax = file_read(file, buffer, size);
+    if (need_acquire){
+      lock_release(&file_lock);
+    }
     //printf("read end with %d\n", f->eax);
-    lock_release(&file_lock);
   }
 }
 
@@ -382,9 +396,14 @@ void sys_write (struct intr_frame * f) {
       f->eax = 0;
       return;
     }
-    lock_acquire(&file_lock);
+    bool need_acquire = !lock_held_by_current_thread(&file_lock);
+    if (need_acquire){
+      lock_acquire(&file_lock);
+    }
     f->eax = file_write (file, buffer, size);
-    lock_release(&file_lock);
+    if (need_acquire){
+      lock_release(&file_lock);
+    }
   }
 }
 
@@ -402,9 +421,14 @@ void sys_seek (struct intr_frame * f) {
   
   if(file == NULL) f->eax = -1;
   
-  lock_acquire(&file_lock);
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   file_seek(file, position);
-  lock_release(&file_lock);
+  if (need_acquire){
+    lock_release(&file_lock);
+  }
 }
 
 //unsigned tell (int fd)
@@ -414,9 +438,14 @@ void sys_tell (struct intr_frame * f) {
   struct file *file = get_file_from_fd(fd);
   if(file == NULL)
     f->eax = -1;
-  lock_acquire(&file_lock);
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   f->eax = file_tell(file);
-  lock_release(&file_lock);
+  if (need_acquire){
+    lock_release(&file_lock);
+  }
 }
 
 //void close (int fd)
@@ -433,9 +462,14 @@ void sys_close (struct intr_frame * f) {
   file = get_file_from_fd(fd);
   t = thread_current();
     
-  lock_acquire(&file_lock);
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   file_close(file);
-  lock_release(&file_lock);
+  if (need_acquire){
+    lock_release(&file_lock);
+  }
   
   for (e = list_begin (&t->fd_table); e != list_end (&t->fd_table);
        e = list_next (e))
@@ -483,10 +517,15 @@ mid_t mmap(int fd, void *addr){
     }
   }
 
-  lock_acquire(&file_lock);
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   open = file_reopen(file);
   if (!open){
-    lock_release(&file_lock);
+    if (need_acquire){
+      lock_release(&file_lock);
+    }
     return -1;
   }
 
@@ -536,7 +575,10 @@ void munmap(mid_t mapping){
     return;
   }
   
-  lock_acquire(&file_lock);
+  bool need_acquire = !lock_held_by_current_thread(&file_lock);
+  if (need_acquire){
+    lock_acquire(&file_lock);
+  }
   size = file_length(memmap->file);
   addr = memmap->addr;
 
@@ -549,7 +591,9 @@ void munmap(mid_t mapping){
 
     ofs += PGSIZE; addr += PGSIZE;
   }
-  lock_release(&file_lock);
+  if (need_acquire){
+    lock_release(&file_lock);
+  }
 
   list_remove(e);
 }
