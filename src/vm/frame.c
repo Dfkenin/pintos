@@ -67,58 +67,39 @@ void *free_frame(void *kpage){
 }
 
 void evict_frame(){
-    struct list_elem *e;
+    struct list_elem *e = lru_pointer;
     struct s_page *sp;
     struct frame *f;
     printf("evict_frame 0\n");
-    e = lru_pointer;
 
     if (e == NULL){
         printf("evict_frame 1\n");
         e = list_begin(&ft);
-        lru_pointer = e;
+        printf("lru_pointer : %p\n", lru_pointer);
     }
+    printf("evict_frame 1\n");
 
     f = list_entry(e, struct frame, lru);
-    if (pagedir_is_accessed(f->t->pagedir, f->upage)){
-        printf("evict_frame 2\n");
+    while (pagedir_is_accessed(f->t->pagedir, f->upage)){
         pagedir_set_accessed(f->t->pagedir, f->upage, false);
-        printf("evict_frame 3\n");
+
         if (list_next(e) == list_end(&ft)){
             e = list_begin(&ft);
         }
         else{
             e = list_next(e);
         }
-        printf("evict_frame 4\n");
-
-        for (; e != lru_pointer; ){
-            f = list_entry(e, struct frame, lru);
-            if (pagedir_is_accessed(f->t->pagedir, f->upage)){
-                pagedir_set_accessed(f->t->pagedir, f->upage, false);
-            }
-            else{
-                break;
-            }
-
-            if (list_next(e) == list_end(&ft)){
-                e = list_begin(&ft);
-            }
-            else{
-                e = list_next(e);
-            }
-        }
-        
-        printf("evict_frame 5\n");
     }
+    
+    printf("evict_frame 2\n");
 
     sp = get_s_page(&thread_current()->s_pt, f->upage);
     sp->swap_index = swap_out(f->kpage);
     sp->status = 1;
-    printf("evict_frame 6\n");
+    printf("evict_frame 3\n");
 
     free_frame(f->kpage);
-    printf("evict_frame 7\n");
+    printf("evict_frame 4\n");
 }
 
 static int
