@@ -157,12 +157,13 @@ page_fault (struct intr_frame *f)
   user = (f->error_code & PF_U) != 0;
   
   //mod 2
-  //previously !user but changed to my project 2 way due to read-boundary case fail.
+  //changed to my project 2 way due to read-boundary case fail.
   if(!fault_addr || is_kernel_vaddr(fault_addr) || !not_present) {
-    f->error_code = 0;
-    f->eip = (void (*)(void)) f->eax;
-    f->eax = -1;
-    return;
+    //f->error_code = 0;
+    //f->eip = (void (*)(void)) f->eax;
+    //f->eax = -1;
+    exit(-1);
+    //return;
   }
 
   //mod 2
