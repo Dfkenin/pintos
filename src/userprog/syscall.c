@@ -530,6 +530,9 @@ mid_t mmap(int fd, void *addr){
   uint32_t read_bytes;
   
   file = get_file_from_fd(fd);  
+  if (file == NULL){
+    return -1;
+  }
   //printf("mmap 1\n");
 
   t = thread_current();
