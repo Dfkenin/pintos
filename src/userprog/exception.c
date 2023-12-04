@@ -143,7 +143,7 @@ page_fault (struct intr_frame *f)
      [IA32-v3a] 5.15 "Interrupt 14--Page Fault Exception
      (#PF)". */
   asm ("movl %%cr2, %0" : "=r" (fault_addr));
-  //printf("page fault with addr : %p\n", fault_addr);
+  printf("page fault with addr : %p\n", fault_addr);
 
   /* Turn interrupts back on (they were only off so that we could
      be assured of reading CR2 before it changed). */
@@ -169,13 +169,13 @@ page_fault (struct intr_frame *f)
 
   //mod 2, 4 for pt-grow-stk-sc
   bool growth = user ? (fault_addr >= f->esp - 32) : (fault_addr >= thread_current()->esp - 32);
-  //printf("fault_addr: %p, f->esp: %p\n", fault_addr, f->esp);
+  printf("fault_addr: %p, f->esp: %p\n", fault_addr, f->esp);
   //printf("To lazy_load!\n");
   if (lazy_load(&thread_current()->s_pt, fault_addr, growth)){
    return;
   }
 
-  //printf("f->esp is %p\n", f->esp);
+  printf("f->esp is %p\n", f->esp);
   exit(-1);
   
   /* To implement virtual memory, delete the rest of the function
