@@ -474,11 +474,14 @@ void sys_close (struct intr_frame * f) {
   struct thread *t;
   struct list_elem *e;
   struct fd_elem *fd_elem;
+  printf("close 0\n");
   
   if(!validate_read(f->esp + 4, 4)) kill_process();
+  printf("close 1\n");
   
   fd = *(int*)(f->esp + 4);
   file = get_file_from_fd(fd);
+  printf("close 2\n");
   t = thread_current();
     
   bool need_acquire = !lock_held_by_current_thread(&file_lock);
@@ -489,14 +492,17 @@ void sys_close (struct intr_frame * f) {
   if (need_acquire){
     lock_release(&file_lock);
   }
+  printf("close 3\n");
   
   for (e = list_begin (&t->fd_table); e != list_end (&t->fd_table);
        e = list_next (e))
   {
     fd_elem = list_entry (e, struct fd_elem, elem);
     if(fd_elem->fd == fd) {
+      printf("close 4\n");
       list_remove(e);
       free(fd_elem);
+      printf("close 5\n");
       return;
     }
   }
