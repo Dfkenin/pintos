@@ -90,12 +90,14 @@ bool lazy_load(struct hash *s_pt, void *fault_addr, bool growth){
 
     if (sp->status == 0){
         if (sp->file){
+            printf("file ok\n");
             bool need_acquire = !lock_held_by_current_thread(&file_lock);
             if (need_acquire){
                 lock_acquire(&file_lock);
             }
             if (file_read_at (sp->file, kpage, sp->read_bytes, sp->ofs) != (int) sp->read_bytes)
             {
+                printf("bad data\n");
                 if (need_acquire){
                     lock_release(&file_lock);
                 }
