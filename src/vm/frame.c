@@ -26,22 +26,30 @@ void *allocate_frame(enum palloc_flags flags, void *upage){
     struct frame *f;
     void *kpage;
     
+    printf("allocate_frame 0\n");
     kpage = palloc_get_page(flags);
+    printf("allocate_frame 1\n");
     if (kpage == NULL){
+        printf("allocate_frame 2\n");
         evict_frame();
+        printf("allocate_frame 3\n");
         kpage = palloc_get_page(flags);
         if (kpage == NULL){
+            printf("allocate_frame 4\n");
             return NULL;
         }
     }
+    printf("allocate_frame 5\n");
 
     f = (struct frame*)malloc(sizeof(struct frame));
+    printf("allocate_frame 6\n");
     f->fid = allocate_fid();
     f->kpage = kpage;
     f->upage = upage;
     f->t = thread_current();
     list_push_back(&ft, &f->lru);
-
+    
+    printf("allocate_frame 7\n");
 
     return f->kpage;
 }
